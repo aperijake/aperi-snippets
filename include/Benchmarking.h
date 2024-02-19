@@ -1,8 +1,9 @@
 #pragma once
 
+#include <mpi.h>
+
 #include <iostream>
 #include <memory>
-#include <mpi.h>
 #include <stk_mesh/base/BulkData.hpp>
 #include <stk_mesh/base/Field.hpp>
 #include <stk_mesh/base/MetaData.hpp>
@@ -50,7 +51,7 @@ class NodeProcessorWithStandardFunction {
 
    private:
     const std::array<DoubleField *, N> m_fields;  // The fields to process
-    stk::mesh::BulkData *m_bulk_data;              // The bulk data object.
+    stk::mesh::BulkData *m_bulk_data;             // The bulk data object.
 };
 
 // A Node processor that applies a std::function to each degree of freedom of each node
@@ -80,7 +81,7 @@ class NodeProcessorWithStandardFunctionAtConstruction {
                 // Loop over each component of the node
                 for (size_t i = 0; i < num_values_per_node; i++) {
                     size_t iI = i_node * num_values_per_node + i;  // Index into the field data
-                    m_func(iI, time_increment, field_data);   // Call the function
+                    m_func(iI, time_increment, field_data);        // Call the function
                 }
             }
         }
@@ -89,7 +90,7 @@ class NodeProcessorWithStandardFunctionAtConstruction {
    private:
     const std::function<void(size_t, double, std::array<double *, N> &)> m_func;  // The function to apply
     const std::array<DoubleField *, N> m_fields;                                  // The fields to process
-    stk::mesh::BulkData *m_bulk_data;                                              // The bulk data object.
+    stk::mesh::BulkData *m_bulk_data;                                             // The bulk data object.
 };
 
 // A Node processor that applies a lambda function to each degree of freedom of each node
@@ -106,7 +107,7 @@ class NodeProcessorWithLambdaFunction {
     // Loop over each node and apply the function
     template <typename Func>
     void for_each_dof(const Func &func) const {
-        size_t num_values_per_node = 3;  // Number of values per node
+        size_t num_values_per_node = 3;      // Number of values per node
         std::array<double *, N> field_data;  // Array to hold field data
 
         // Loop over all the buckets
@@ -120,7 +121,7 @@ class NodeProcessorWithLambdaFunction {
                 // Loop over each component of the node
                 for (size_t i = 0; i < num_values_per_node; i++) {
                     size_t iI = i_node * num_values_per_node + i;  // Index into the field data
-                    func(iI, field_data);   // Call the function
+                    func(iI, field_data);                          // Call the function
                 }
             }
         }
@@ -128,7 +129,7 @@ class NodeProcessorWithLambdaFunction {
 
    private:
     const std::array<DoubleField *, N> m_fields;  // The fields to process
-    stk::mesh::BulkData *m_bulk_data;              ///< The bulk data object.
+    stk::mesh::BulkData *m_bulk_data;             ///< The bulk data object.
 };
 
 // A Node processor that applies a lambda function to each degree of freedom of each node
@@ -138,7 +139,7 @@ class NodeProcessorWithLambdaFunctionSeparateFields {
     typedef stk::mesh::Field<double> DoubleField;
 
    public:
-    NodeProcessorWithLambdaFunctionSeparateFields(const DoubleField * field_0, const DoubleField * field_1, const DoubleField * field_2, stk::mesh::BulkData *bulk_data)
+    NodeProcessorWithLambdaFunctionSeparateFields(const DoubleField *field_0, const DoubleField *field_1, const DoubleField *field_2, stk::mesh::BulkData *bulk_data)
         : m_field_0(field_0), m_field_1(field_1), m_field_2(field_2), m_bulk_data(bulk_data) {}
 
     // Loop over each node and apply the function
@@ -149,9 +150,9 @@ class NodeProcessorWithLambdaFunctionSeparateFields {
         // Loop over all the buckets
         for (stk::mesh::Bucket *bucket : m_bulk_data->buckets(stk::topology::NODE_RANK)) {
             // Get the field data for the bucket
-            double* field_data_0 = stk::mesh::field_data(*m_field_0, *bucket);
-            double* field_data_1 = stk::mesh::field_data(*m_field_1, *bucket);
-            double* field_data_2 = stk::mesh::field_data(*m_field_2, *bucket);
+            double *field_data_0 = stk::mesh::field_data(*m_field_0, *bucket);
+            double *field_data_1 = stk::mesh::field_data(*m_field_1, *bucket);
+            double *field_data_2 = stk::mesh::field_data(*m_field_2, *bucket);
             // Loop over each node in the bucket
             for (size_t i_node = 0; i_node < bucket->size(); i_node++) {
                 // Loop over each component of the node
@@ -177,8 +178,8 @@ class NodeProcessorWithLambdaFunctionSeparateFields {
 // Functor class
 template <size_t N>
 struct NodeProcessorFunctor {
-    void operator()(size_t iI, double time_increment, std::array<double *, N>& field_data) const {
-         field_data[2][iI] = field_data[0][iI] + time_increment * field_data[1][iI];
+    void operator()(size_t iI, double time_increment, std::array<double *, N> &field_data) const {
+        field_data[2][iI] = field_data[0][iI] + time_increment * field_data[1][iI];
     }
 };
 
@@ -186,13 +187,13 @@ template <size_t N>
 class NodeProcessorWithFunctorClass {
     typedef stk::mesh::Field<double> DoubleField;
 
-public:
+   public:
     NodeProcessorWithFunctorClass(const std::array<DoubleField *, N> fields, stk::mesh::BulkData *bulk_data, NodeProcessorFunctor<N> func)
         : m_fields(fields), m_bulk_data(bulk_data), m_func(func) {}
 
     // Loop over each node and apply the function
     void for_each_dof(double time_increment) const {
-        size_t num_values_per_node = 3;  // Number of values per node
+        size_t num_values_per_node = 3;      // Number of values per node
         std::array<double *, N> field_data;  // Array to hold field data
 
         // Loop over all the buckets
@@ -206,18 +207,17 @@ public:
                 // Loop over each component of the node
                 for (size_t i = 0; i < num_values_per_node; i++) {
                     size_t iI = i_node * num_values_per_node + i;  // Index into the field data
-                    m_func(iI, time_increment, field_data);   // Call the function
+                    m_func(iI, time_increment, field_data);        // Call the function
                 }
             }
         }
     }
 
-private:
- const std::array<DoubleField *, N> m_fields;  // The fields to process
- stk::mesh::BulkData *m_bulk_data;              // The bulk data object.
- NodeProcessorFunctor<N> m_func;                // The functor to apply
+   private:
+    const std::array<DoubleField *, N> m_fields;  // The fields to process
+    stk::mesh::BulkData *m_bulk_data;             // The bulk data object.
+    NodeProcessorFunctor<N> m_func;               // The functor to apply
 };
-
 
 // A Node processor that applies a function to each degree of freedom of each node
 // Fields are passed in as three pointers at construction time
@@ -226,7 +226,7 @@ private:
 // Functor base class
 template <size_t N>
 struct NodeProcessorFunctorBase {
-    virtual void operator()(size_t iI, double time_increment, std::array<double *, N>& field_data) = 0;
+    virtual void operator()(size_t iI, double time_increment, std::array<double *, N> &field_data) = 0;
 };
 
 // Functor derived class
@@ -240,13 +240,13 @@ template <size_t N>
 class NodeProcessorWithDerivedFunctorClass {
     typedef stk::mesh::Field<double> DoubleField;
 
-public:
+   public:
     NodeProcessorWithDerivedFunctorClass(const std::array<DoubleField *, N> fields, stk::mesh::BulkData *bulk_data, std::shared_ptr<NodeProcessorFunctorBase<N>> func)
         : m_fields(fields), m_bulk_data(bulk_data), m_func(func) {}
 
     // Loop over each node and apply the function
     void for_each_dof(double time_increment) const {
-        size_t num_values_per_node = 3;  // Number of values per node
+        size_t num_values_per_node = 3;      // Number of values per node
         std::array<double *, N> field_data;  // Array to hold field data
 
         // Loop over all the buckets
@@ -259,19 +259,18 @@ public:
             for (size_t i_node = 0; i_node < bucket->size(); i_node++) {
                 // Loop over each component of the node
                 for (size_t i = 0; i < num_values_per_node; i++) {
-                    size_t iI = i_node * num_values_per_node + i;  // Index into the field data
-                    m_func->operator()(iI, time_increment, field_data);   // Call the function
+                    size_t iI = i_node * num_values_per_node + i;        // Index into the field data
+                    m_func->operator()(iI, time_increment, field_data);  // Call the function
                 }
             }
         }
     }
 
-private:
- const std::array<DoubleField *, N> m_fields;         // The fields to process
- stk::mesh::BulkData *m_bulk_data;                     // The bulk data object.
- std::shared_ptr<NodeProcessorFunctorBase<N>> m_func;  // The functor to apply
+   private:
+    const std::array<DoubleField *, N> m_fields;          // The fields to process
+    stk::mesh::BulkData *m_bulk_data;                     // The bulk data object.
+    std::shared_ptr<NodeProcessorFunctorBase<N>> m_func;  // The functor to apply
 };
-
 
 // A Node processor that applies a lambda function to each degree of freedom of each node
 // Fields are passed in as an array of pointers at construction time
@@ -285,8 +284,8 @@ class NodeProcessorWithLambdaFunctionNoTemplate {
         : m_fields(fields), m_bulk_data(bulk_data) {}
 
     // Loop over each node and apply the function
-    void for_each_dof(const std::vector<double>& data, void(*func)(size_t iI, const std::vector<double>& data, std::array<double *, N> &field_data)) const {
-        size_t num_values_per_node = 3;  // Number of values per node
+    void for_each_dof(const std::vector<double> &data, void (*func)(size_t iI, const std::vector<double> &data, std::array<double *, N> &field_data)) const {
+        size_t num_values_per_node = 3;      // Number of values per node
         std::array<double *, N> field_data;  // Array to hold field data
 
         // Loop over all the buckets
@@ -300,7 +299,7 @@ class NodeProcessorWithLambdaFunctionNoTemplate {
                 // Loop over each component of the node
                 for (size_t i = 0; i < num_values_per_node; i++) {
                     size_t iI = i_node * num_values_per_node + i;  // Index into the field data
-                    func(iI, data, field_data);   // Call the function
+                    func(iI, data, field_data);                    // Call the function
                 }
             }
         }
@@ -308,7 +307,7 @@ class NodeProcessorWithLambdaFunctionNoTemplate {
 
    private:
     const std::array<DoubleField *, N> m_fields;  // The fields to process
-    stk::mesh::BulkData *m_bulk_data;              ///< The bulk data object.
+    stk::mesh::BulkData *m_bulk_data;             ///< The bulk data object.
 };
 
 // A Node processor that applies a lambda function to each degree of freedom of each node
@@ -322,8 +321,8 @@ class NodeProcessorWithLambdaFunctionNoTemplateVector {
         : m_fields(fields), m_bulk_data(bulk_data) {}
 
     // Loop over each node and apply the function
-    void for_each_dof(const std::vector<double>& data, void(*func)(size_t iI, const std::vector<double>& data, std::vector<double *> &field_data)) const {
-        size_t num_values_per_node = 3;  // Number of values per node
+    void for_each_dof(const std::vector<double> &data, void (*func)(size_t iI, const std::vector<double> &data, std::vector<double *> &field_data)) const {
+        size_t num_values_per_node = 3;                     // Number of values per node
         std::vector<double *> field_data(m_fields.size());  // Array to hold field data
 
         // Loop over all the buckets
@@ -337,7 +336,7 @@ class NodeProcessorWithLambdaFunctionNoTemplateVector {
                 // Loop over each component of the node
                 for (size_t i = 0; i < num_values_per_node; i++) {
                     size_t iI = i_node * num_values_per_node + i;  // Index into the field data
-                    func(iI, data, field_data);   // Call the function
+                    func(iI, data, field_data);                    // Call the function
                 }
             }
         }
@@ -345,9 +344,8 @@ class NodeProcessorWithLambdaFunctionNoTemplateVector {
 
    private:
     const std::vector<DoubleField *> m_fields;  // The fields to process
-    stk::mesh::BulkData *m_bulk_data;              ///< The bulk data object.
+    stk::mesh::BulkData *m_bulk_data;           ///< The bulk data object.
 };
-
 
 // A Node processor that applies a lambda function to each degree of freedom of each node
 // Fields are passed in as an vector of pointers at construction time
@@ -356,12 +354,12 @@ class NodeProcessorWithLambdaFunctionNoTemplateVectorConstruction {
     typedef stk::mesh::Field<double> DoubleField;
 
    public:
-    NodeProcessorWithLambdaFunctionNoTemplateVectorConstruction(const std::vector<DoubleField *> fields, void(*func)(size_t iI, const std::vector<double>& data, std::vector<double *> &field_data), stk::mesh::BulkData *bulk_data)
+    NodeProcessorWithLambdaFunctionNoTemplateVectorConstruction(const std::vector<DoubleField *> fields, void (*func)(size_t iI, const std::vector<double> &data, std::vector<double *> &field_data), stk::mesh::BulkData *bulk_data)
         : m_fields(fields), m_func(func), m_bulk_data(bulk_data) {}
 
     // Loop over each node and apply the function
-    void for_each_dof(const std::vector<double>& data) const {
-        size_t num_values_per_node = 3;  // Number of values per node
+    void for_each_dof(const std::vector<double> &data) const {
+        size_t num_values_per_node = 3;                     // Number of values per node
         std::vector<double *> field_data(m_fields.size());  // Array to hold field data
 
         // Loop over all the buckets
@@ -375,18 +373,17 @@ class NodeProcessorWithLambdaFunctionNoTemplateVectorConstruction {
                 // Loop over each component of the node
                 for (size_t i = 0; i < num_values_per_node; i++) {
                     size_t iI = i_node * num_values_per_node + i;  // Index into the field data
-                    m_func(iI, data, field_data);   // Call the function
+                    m_func(iI, data, field_data);                  // Call the function
                 }
             }
         }
     }
 
    private:
-    const std::vector<DoubleField *> m_fields;                                                     // The fields to process
+    const std::vector<DoubleField *> m_fields;                                                      // The fields to process
     void (*m_func)(size_t iI, const std::vector<double> &data, std::vector<double *> &field_data);  // The function to apply
     stk::mesh::BulkData *m_bulk_data;                                                               ///< The bulk data object.
 };
-
 
 // A Node processor that applies a lambda function to each degree of freedom of each node
 // Fields are passed in as an vector of pointers at construction time
@@ -396,10 +393,10 @@ class NodeProcessorWithLambdaFunctionNoTemplateVectorBase {
     typedef stk::mesh::Field<double> DoubleField;
 
    public:
-    NodeProcessorWithLambdaFunctionNoTemplateVectorBase(){}
+    NodeProcessorWithLambdaFunctionNoTemplateVectorBase() {}
 
     // Loop over each node and apply the function
-    virtual void for_each_dof(const std::vector<double>& data, void(*func)(size_t iI, const std::vector<double>& data, std::vector<double *> &field_data)) const = 0;
+    virtual void for_each_dof(const std::vector<double> &data, void (*func)(size_t iI, const std::vector<double> &data, std::vector<double *> &field_data)) const = 0;
 };
 
 class NodeProcessorWithLambdaFunctionNoTemplateVectorDerived : public NodeProcessorWithLambdaFunctionNoTemplateVectorBase {
@@ -410,8 +407,8 @@ class NodeProcessorWithLambdaFunctionNoTemplateVectorDerived : public NodeProces
         : m_fields(fields), m_bulk_data(bulk_data) {}
 
     // Loop over each node and apply the function
-    void for_each_dof(const std::vector<double>& data, void(*func)(size_t iI, const std::vector<double>& data, std::vector<double *> &field_data)) const override {
-        size_t num_values_per_node = 3;  // Number of values per node
+    void for_each_dof(const std::vector<double> &data, void (*func)(size_t iI, const std::vector<double> &data, std::vector<double *> &field_data)) const override {
+        size_t num_values_per_node = 3;                     // Number of values per node
         std::vector<double *> field_data(m_fields.size());  // Array to hold field data
 
         // Loop over all the buckets
@@ -425,7 +422,7 @@ class NodeProcessorWithLambdaFunctionNoTemplateVectorDerived : public NodeProces
                 // Loop over each component of the node
                 for (size_t i = 0; i < num_values_per_node; i++) {
                     size_t iI = i_node * num_values_per_node + i;  // Index into the field data
-                    func(iI, data, field_data);   // Call the function
+                    func(iI, data, field_data);                    // Call the function
                 }
             }
         }
@@ -433,9 +430,8 @@ class NodeProcessorWithLambdaFunctionNoTemplateVectorDerived : public NodeProces
 
    private:
     const std::vector<DoubleField *> m_fields;  // The fields to process
-    stk::mesh::BulkData *m_bulk_data;              ///< The bulk data object.
+    stk::mesh::BulkData *m_bulk_data;           ///< The bulk data object.
 };
-
 
 // A Node processor that applies a lambda function to each degree of freedom of each node
 // Fields are passed in as an array of pointers at construction time
@@ -446,14 +442,14 @@ class NodeProcessorWithLambdaFunctionNoTemplateBase {
     typedef stk::mesh::Field<double> DoubleField;
 
    public:
-    NodeProcessorWithLambdaFunctionNoTemplateBase(){}
+    NodeProcessorWithLambdaFunctionNoTemplateBase() {}
 
     // Loop over each node and apply the function
-    virtual void for_each_dof(const std::array<double, M>& data, void(*func)(size_t iI, const std::array<double, M>& data, std::array<double *, N> &field_data)) const = 0;
+    virtual void for_each_dof(const std::array<double, M> &data, void (*func)(size_t iI, const std::array<double, M> &data, std::array<double *, N> &field_data)) const = 0;
 };
 
 template <size_t N, size_t M>
-class NodeProcessorWithLambdaFunctionNoTemplateDerived : public NodeProcessorWithLambdaFunctionNoTemplateBase<N, M>{
+class NodeProcessorWithLambdaFunctionNoTemplateDerived : public NodeProcessorWithLambdaFunctionNoTemplateBase<N, M> {
     typedef stk::mesh::Field<double> DoubleField;
 
    public:
@@ -461,8 +457,8 @@ class NodeProcessorWithLambdaFunctionNoTemplateDerived : public NodeProcessorWit
         : m_fields(fields), m_bulk_data(bulk_data) {}
 
     // Loop over each node and apply the function
-    void for_each_dof(const std::array<double, M>& data, void(*func)(size_t iI, const std::array<double, M>& data, std::array<double *, N> &field_data)) const override {
-        size_t num_values_per_node = 3;  // Number of values per node
+    void for_each_dof(const std::array<double, M> &data, void (*func)(size_t iI, const std::array<double, M> &data, std::array<double *, N> &field_data)) const override {
+        size_t num_values_per_node = 3;      // Number of values per node
         std::array<double *, N> field_data;  // Array to hold field data
 
         // Loop over all the buckets
@@ -476,7 +472,7 @@ class NodeProcessorWithLambdaFunctionNoTemplateDerived : public NodeProcessorWit
                 // Loop over each component of the node
                 for (size_t i = 0; i < num_values_per_node; i++) {
                     size_t iI = i_node * num_values_per_node + i;  // Index into the field data
-                    func(iI, data, field_data);   // Call the function
+                    func(iI, data, field_data);                    // Call the function
                 }
             }
         }
@@ -484,7 +480,7 @@ class NodeProcessorWithLambdaFunctionNoTemplateDerived : public NodeProcessorWit
 
    private:
     const std::array<DoubleField *, N> m_fields;  // The fields to process
-    stk::mesh::BulkData *m_bulk_data;              ///< The bulk data object.
+    stk::mesh::BulkData *m_bulk_data;             ///< The bulk data object.
 };
 
 class Benchmarking {
@@ -518,7 +514,6 @@ class Benchmarking {
     DoubleField *velocity_field_n;
     DoubleField *velocity_field_np1;
     DoubleField *acceleration_field_n;
-
 };
 
 void BenchmarkingTest();

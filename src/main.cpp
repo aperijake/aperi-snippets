@@ -28,8 +28,7 @@ int main(int argc, char* argv[]) {
     // Run the application
     RunTest();
 
-    if (rank == 0)
-    {
+    if (rank == 0) {
         std::cout << "aperi-snippets finished successfully!" << std::endl;
     }
 

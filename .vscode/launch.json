@@ -27,6 +27,6 @@
       "args": ["input.yaml"],
       "cwd": "${workspaceFolder}/build",
       "preLaunchTask": "make_debug"
-    },
+    }
   ]
 }

@@ -2,7 +2,6 @@
 
 #include <iostream>
 #include <random>
-
 #include <stk_io/StkMeshIoBroker.hpp>
 #include <stk_mesh/base/BulkData.hpp>
 #include <stk_mesh/base/FieldBase.hpp>
@@ -38,7 +37,7 @@ Notes:
         - Trying the speed out when using base and derived classes.
     - Node processor with lambda function without a template and base and derived classes: The nodal loop is implemented using a node processor with a lambda function without a template and base and derived classes.
         - Seeing if going back to arrays instead of vectors for field data makes a difference.
-    
+
 
 Runtimes:
 - 1.032539e+00s. Elapsed time (Direct Function)
@@ -61,10 +60,10 @@ Conclusion:
 
 // Benchmarking of different node loops
 void BenchmarkingTest() {
-     MPI_Comm communicator = MPI_COMM_WORLD;
+    MPI_Comm communicator = MPI_COMM_WORLD;
     std::shared_ptr<stk::mesh::BulkData> p_bulk = stk::mesh::MeshBuilder(communicator).create();
     p_bulk->mesh_meta_data().use_simple_fields();
-    stk::mesh::MetaData& meta_data = p_bulk->mesh_meta_data();
+    stk::mesh::MetaData &meta_data = p_bulk->mesh_meta_data();
 
     stk::io::StkMeshIoBroker mesh_reader;
     mesh_reader.set_bulk_data(*p_bulk);
@@ -73,12 +72,12 @@ void BenchmarkingTest() {
     mesh_reader.add_all_mesh_fields_as_input_fields();
 
     // Create the fields
-    stk::mesh::FieldBase& velocity_field = meta_data.declare_field<double>(stk::topology::NODE_RANK, "velocity", 2);
+    stk::mesh::FieldBase &velocity_field = meta_data.declare_field<double>(stk::topology::NODE_RANK, "velocity", 2);
     stk::mesh::put_field_on_entire_mesh(velocity_field, 2);
     stk::io::set_field_output_type(velocity_field, stk::io::FieldOutputType::VECTOR_3D);
     stk::io::set_field_role(velocity_field, Ioss::Field::TRANSIENT);
 
-    stk::mesh::FieldBase& acceleration_field = meta_data.declare_field<double>(stk::topology::NODE_RANK, "acceleration", 2);
+    stk::mesh::FieldBase &acceleration_field = meta_data.declare_field<double>(stk::topology::NODE_RANK, "acceleration", 2);
     stk::mesh::put_field_on_entire_mesh(acceleration_field, 2);
     stk::io::set_field_output_type(acceleration_field, stk::io::FieldOutputType::VECTOR_3D);
     stk::io::set_field_role(acceleration_field, Ioss::Field::TRANSIENT);
@@ -141,7 +140,6 @@ void Benchmarking::DirectFunction(double time_increment) {
 }
 
 void Benchmarking::Run() {
-
     double time_increment = 0.123;
     size_t num_runs = 100000;
     std::cout << std::scientific << std::setprecision(6);  // Set output to scientific notation and 6 digits of precision
@@ -159,10 +157,9 @@ void Benchmarking::Run() {
     std::chrono::duration<double> elapsed_seconds = end - start;
     std::cout << elapsed_seconds.count() << "s. Elapsed time (Direct Function)\n";
 
-
     // ************************************************************************
     // Node processor with standard function
-    const std::array<DoubleField*,3> fields = {velocity_field_n, acceleration_field_n, velocity_field_np1};
+    const std::array<DoubleField *, 3> fields = {velocity_field_n, acceleration_field_n, velocity_field_np1};
     NodeProcessorWithStandardFunction<3> node_processor_with_standard_function = NodeProcessorWithStandardFunction<3>(fields, bulk_data);
 
     start = std::chrono::high_resolution_clock::now();
@@ -177,14 +174,13 @@ void Benchmarking::Run() {
     elapsed_seconds = end - start;
     std::cout << elapsed_seconds.count() << "s. Elapsed time (Node Processor with Standard Function)\n";
 
-
     // ************************************************************************
     // Node processor with standard function set at construction
     const std::function<void(size_t, double, std::array<double *, 3> &)> func_node_processor_with_standard_function_at_construction = [&](size_t iI, double time_increment, std::array<double *, 3> &field_data) {
         field_data[2][iI] = field_data[0][iI] + time_increment * field_data[1][iI];
     };
     NodeProcessorWithStandardFunctionAtConstruction<3> node_processor_with_standard_function_at_construction = NodeProcessorWithStandardFunctionAtConstruction<3>(func_node_processor_with_standard_function_at_construction, fields, bulk_data);
-    
+
     start = std::chrono::high_resolution_clock::now();
     for (size_t i = 0; i < num_runs; i++) {
         node_processor_with_standard_function_at_construction.for_each_dof(time_increment);
@@ -192,7 +188,6 @@ void Benchmarking::Run() {
     end = std::chrono::high_resolution_clock::now();
     elapsed_seconds = end - start;
     std::cout << elapsed_seconds.count() << "s. Elapsed time (Node Processor with Standard Function at Construction)\n";
-
 
     // ************************************************************************
     // Node processor with lambda function
@@ -208,7 +203,6 @@ void Benchmarking::Run() {
     elapsed_seconds = end - start;
     std::cout << elapsed_seconds.count() << "s. Elapsed time (Node Processor with Lambda Function)\n";
 
-
     // ************************************************************************
     // Node processor with lambda function with separate fields
     NodeProcessorWithLambdaFunctionSeparateFields node_processor_with_lambda_function_separate_fields = NodeProcessorWithLambdaFunctionSeparateFields(velocity_field_n, acceleration_field_n, velocity_field_np1, bulk_data);
@@ -223,7 +217,6 @@ void Benchmarking::Run() {
     elapsed_seconds = end - start;
     std::cout << elapsed_seconds.count() << "s. Elapsed time (Node Processor with Lambda Function with Separate Fields)\n";
 
-
     // ************************************************************************
     // Node processor with functor class
     NodeProcessorFunctor<3> node_processor_functor = NodeProcessorFunctor<3>();
@@ -236,7 +229,6 @@ void Benchmarking::Run() {
     end = std::chrono::high_resolution_clock::now();
     elapsed_seconds = end - start;
     std::cout << elapsed_seconds.count() << "s. Elapsed time (Node Processor with Functor Class)\n";
-
 
     // ************************************************************************
     // Node processor with derived functor class
@@ -253,14 +245,13 @@ void Benchmarking::Run() {
     elapsed_seconds = end - start;
     std::cout << elapsed_seconds.count() << "s. Elapsed time (Node Processor with Derived Functor Class)\n";
 
-
     // ************************************************************************
     // Node processor with lambda function without a template
     NodeProcessorWithLambdaFunctionNoTemplate node_processor_with_lambda_function_no_template = NodeProcessorWithLambdaFunctionNoTemplate(fields, bulk_data);
 
     start = std::chrono::high_resolution_clock::now();
     for (size_t i = 0; i < num_runs; i++) {
-        node_processor_with_lambda_function_no_template.for_each_dof({time_increment}, [](size_t iI, const std::vector<double>& data, std::array<double *, 3> &field_data) {
+        node_processor_with_lambda_function_no_template.for_each_dof({time_increment}, [](size_t iI, const std::vector<double> &data, std::array<double *, 3> &field_data) {
             field_data[2][iI] = field_data[0][iI] + data[0] * field_data[1][iI];
         });
     }
@@ -268,22 +259,20 @@ void Benchmarking::Run() {
     elapsed_seconds = end - start;
     std::cout << elapsed_seconds.count() << "s. Elapsed time (Node Processor with Lambda Function without a Template)\n";
 
-
     // ************************************************************************
     // Node processor with lambda function without a template, vector for field data
-    std::vector<DoubleField*> fields_no_template = {velocity_field_n, acceleration_field_n, velocity_field_np1};
+    std::vector<DoubleField *> fields_no_template = {velocity_field_n, acceleration_field_n, velocity_field_np1};
     NodeProcessorWithLambdaFunctionNoTemplateVector node_processor_with_lambda_function_no_template_vector = NodeProcessorWithLambdaFunctionNoTemplateVector(fields_no_template, bulk_data);
 
     start = std::chrono::high_resolution_clock::now();
     for (size_t i = 0; i < num_runs; i++) {
-        node_processor_with_lambda_function_no_template_vector.for_each_dof({time_increment}, [](size_t iI, const std::vector<double>& data, std::vector<double *> &field_data) {
+        node_processor_with_lambda_function_no_template_vector.for_each_dof({time_increment}, [](size_t iI, const std::vector<double> &data, std::vector<double *> &field_data) {
             field_data[2][iI] = field_data[0][iI] + data[0] * field_data[1][iI];
         });
     }
     end = std::chrono::high_resolution_clock::now();
     elapsed_seconds = end - start;
     std::cout << elapsed_seconds.count() << "s. Elapsed time (Node Processor with Lambda Function without a Template and Vector for Field Data)\n";
-
 
     // ************************************************************************
     // Node processor with lambda function without a template, vector for field data, function set at construction
@@ -300,14 +289,13 @@ void Benchmarking::Run() {
     elapsed_seconds = end - start;
     std::cout << elapsed_seconds.count() << "s. Elapsed time (Node Processor with Lambda Function without a Template and Vector for Field Data and Function Set at Construction)\n";
 
-
     // ************************************************************************
     // Node processor with lambda function without a template, vector for field data, base and derived classes
     std::shared_ptr<NodeProcessorWithLambdaFunctionNoTemplateVectorBase> node_processor_with_lambda_function_no_template_vector_derived = std::make_shared<NodeProcessorWithLambdaFunctionNoTemplateVectorDerived>(fields_no_template, bulk_data);
 
     start = std::chrono::high_resolution_clock::now();
     for (size_t i = 0; i < num_runs; i++) {
-        node_processor_with_lambda_function_no_template_vector_derived->for_each_dof({time_increment}, [](size_t iI, const std::vector<double>& data, std::vector<double *> &field_data) {
+        node_processor_with_lambda_function_no_template_vector_derived->for_each_dof({time_increment}, [](size_t iI, const std::vector<double> &data, std::vector<double *> &field_data) {
             field_data[2][iI] = field_data[0][iI] + data[0] * field_data[1][iI];
         });
     }
@@ -315,10 +303,9 @@ void Benchmarking::Run() {
     elapsed_seconds = end - start;
     std::cout << elapsed_seconds.count() << "s. Elapsed time (Node Processor with Lambda Function without a Template and Vector for Field Data and Base and Derived Classes)\n";
 
-
     // ************************************************************************
     // Node processor with lambda function without a template, array for field data, base and derived classes
-    std::shared_ptr<NodeProcessorWithLambdaFunctionNoTemplateBase<3,1>> node_processor_with_lambda_function_no_template_derived = std::make_shared<NodeProcessorWithLambdaFunctionNoTemplateDerived<3,1>>(fields, bulk_data);
+    std::shared_ptr<NodeProcessorWithLambdaFunctionNoTemplateBase<3, 1>> node_processor_with_lambda_function_no_template_derived = std::make_shared<NodeProcessorWithLambdaFunctionNoTemplateDerived<3, 1>>(fields, bulk_data);
 
     start = std::chrono::high_resolution_clock::now();
     for (size_t i = 0; i < num_runs; i++) {
@@ -329,6 +316,4 @@ void Benchmarking::Run() {
     end = std::chrono::high_resolution_clock::now();
     elapsed_seconds = end - start;
     std::cout << elapsed_seconds.count() << "s. Elapsed time (Node Processor with Lambda Function without a Template and Base and Derived Classes)\n";
-
-
 }
