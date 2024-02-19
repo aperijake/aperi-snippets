@@ -1,0 +1,50 @@
+#!/bin/bash
+
+# Initialize variables with default values
+BUILD_TYPE="Release"
+
+# Parse command-line options
+while [[ $# -gt 0 ]]; do
+	key="$1"
+	case ${key} in
+	-t | --build-type)
+		BUILD_TYPE="$2"
+		shift
+		shift
+		;;
+	*)
+		echo "Unknown option: $1"
+		exit 1
+		;;
+	esac
+done
+
+# Activate Spack environment
+eval $(spack env activate --sh aperi-snippets)
+
+# Create build directory
+mkdir -p build
+cd build || exit
+
+# Remove CMakeCache if it exists
+rm -f CMakeCache.txt
+
+# Configure CMake with specified build type and other options
+cmake_command="cmake"
+
+cmake_command+=" -D CMAKE_BUILD_TYPE:STRING=\"${BUILD_TYPE}\""
+cmake_command+=" -D TRILINOS_PATH:FILEPATH=$(spack location -i trilinos)"
+if [[ ${BUILD_TYPE} == "Debug" ]]; then
+	cmake_command+=" -D CMAKE_CXX_FLAGS:STRING='-O0 -g -Wall -std=c++20 -pedantic -Wno-long-long -ftrapv -Wno-deprecated'"
+elif [[ ${BUILD_TYPE} == "Release" ]]; then
+	cmake_command+=" -D CMAKE_CXX_FLAGS:STRING='-O2 -Wall -std=c++20 -pedantic -Wno-long-long -ftrapv -Wno-deprecated'"
+elif [[ ${BUILD_TYPE} == "RelWithDebInfo" ]]; then
+	cmake_command+=" -D CMAKE_CXX_FLAGS:STRING='-O2 -g -Wall -std=c++20 -pedantic -Wno-long-long -ftrapv -Wno-deprecated'"
+else
+	echo "Unknown build type: ${BUILD_TYPE}"
+	exit 1
+fi
+cmake_command+=" .."
+
+echo "CMake Command: ${cmake_command}"
+eval "${cmake_command}"

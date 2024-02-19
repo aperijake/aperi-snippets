@@ -1,0 +1,32 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "make",
+      "type": "shell",
+      "command": "./do_configure; cd build; make",
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      }
+    },
+    {
+      "label": "make_debug",
+      "type": "shell",
+      "command": "./do_configure --build-type Debug; cd build; make",
+      "group": {
+        "kind": "build",
+        "isDefault": false
+      }
+    },
+    {
+      "label": "make_relwithdebinfo",
+      "type": "shell",
+      "command": "./do_configure --build-type RelWithDebInfo; cd build; make",
+      "group": {
+        "kind": "build",
+        "isDefault": false
+      }
+    }
+  ]
+}

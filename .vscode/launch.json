@@ -1,0 +1,32 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Release",
+      "type": "lldb",
+      "request": "launch",
+      "program": "${workspaceFolder}/build/aperi-snippets",
+      "args": ["input.yaml"],
+      "cwd": "${workspaceFolder}/build",
+      "preLaunchTask": "make"
+    },
+    {
+      "name": "ReleaseWithDebugInfo",
+      "type": "lldb",
+      "request": "launch",
+      "program": "${workspaceFolder}/build/aperi-snippets_relwithdebinfo",
+      "args": ["input.yaml"],
+      "cwd": "${workspaceFolder}/build",
+      "preLaunchTask": "make_relwithdebinfo"
+    },
+    {
+      "name": "Debug",
+      "type": "lldb",
+      "request": "launch",
+      "program": "${workspaceFolder}/build/aperi-snippets_debug",
+      "args": ["input.yaml"],
+      "cwd": "${workspaceFolder}/build",
+      "preLaunchTask": "make_debug"
+    },
+  ]
+}
