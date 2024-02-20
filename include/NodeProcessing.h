@@ -10,8 +10,6 @@
 #include <stk_topology/topology.hpp>
 #include <vector>
 
-#include "Benchmarking.h"
-
 // Notes on things to test
 // Direct call in a function
 // Lambda in a function
@@ -516,4 +514,4 @@ class Benchmarking {
     DoubleField *acceleration_field_n;
 };
 
-void BenchmarkingTest();
+void BenchmarkNodeProcessing();

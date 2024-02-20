@@ -2,11 +2,11 @@
 
 #include <iostream>
 
-#include "Benchmarking.h"
+#include "NodeProcessing.h"
 
 void RunTest() {
     // Run the benchmarking test
-    BenchmarkingTest();
+    BenchmarkNodeProcessing();
 }
 
 int main(int argc, char* argv[]) {

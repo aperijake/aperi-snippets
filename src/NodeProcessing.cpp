@@ -1,4 +1,4 @@
-#include "Benchmarking.h"
+#include "NodeProcessing.h"
 
 #include <iostream>
 #include <random>
@@ -59,7 +59,7 @@ Conclusion:
 */
 
 // Benchmarking of different node loops
-void BenchmarkingTest() {
+void BenchmarkNodeProcessing() {
     MPI_Comm communicator = MPI_COMM_WORLD;
     std::shared_ptr<stk::mesh::BulkData> p_bulk = stk::mesh::MeshBuilder(communicator).create();
     p_bulk->mesh_meta_data().use_simple_fields();
