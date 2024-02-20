@@ -15,15 +15,20 @@ Notes:
 - The benchmarking is done for a simple element loop
 - The element loop is implemented in different ways to compare the performance.
 - Different implementations:
-    - Element processor ...
-        - Notes
+    - Direct function: The element loop is implemented directly in a function.
+    - Element processor with lambda function: The element loop is implemented in a class with a lambda function.
+    - Element processor with lambda function, vector instead of array: The element loop is implemented in a class with a lambda function. The fields to gather are passed as a vector instead of an array.
+    - Element processor with lambda function, 3 fields: The element loop is implemented in a class with a lambda function. The fields to gather are passed as separate arguments instead of an array or a vector.
 
 
 Runtimes:
-- Xs. Elapsed time (Element Processor with Lambda Function)
+- 1.809872e+00s. Elapsed time (Direct Function)
+- 2.041478e+00s. Elapsed time (Node Processor with Lambda Function)
+- 3.194519e+00s. Elapsed time (Node Processor with Lambda Function. Vector instead of array)
+- 1.872580e+00s. Elapsed time (Node Processor with Lambda Function. 3 fields)
 
 Conclusion:
-- TBD
+- Going with the lambda function in a class is a good option. It is more flexible and can be extended to more complex cases while balancing the performance.
 */
 
 // Benchmarking of different node loops
@@ -226,7 +231,7 @@ void ElementProcessingBenchmarking::Run() {
     CheckForces();
 
     // ************************************************************************
-    // Element processor with lambda function
+    // Element processor with lambda function, vector instead of array
     stk::mesh::field_fill(0.0, *force_field);
     const std::vector<DoubleField *> fields_to_gather_vec = {coordinates_field, displacement_field, velocity_field};
     ElementProcessorWithLambdaFunctionVector element_processor_with_lambda_function_vector = ElementProcessorWithLambdaFunctionVector(fields_to_gather_vec, force_field, num_nodes_per_element, bulk_data);
@@ -240,6 +245,23 @@ void ElementProcessingBenchmarking::Run() {
     end = std::chrono::high_resolution_clock::now();
     elapsed_seconds = end - start;
     std::cout << elapsed_seconds.count() << "s. Elapsed time (Node Processor with Lambda Function. Vector instead of array)\n";
+
+    CheckForces();
+
+    // ************************************************************************
+    // Element processor with lambda function, 3 fields
+    stk::mesh::field_fill(0.0, *force_field);
+    ElementProcessorWithLambdaFunction3Fields element_processor_with_lambda_function_3_fields = ElementProcessorWithLambdaFunction3Fields(coordinates_field, displacement_field, velocity_field, force_field, num_nodes_per_element, bulk_data);
+
+    start = std::chrono::high_resolution_clock::now();
+    for (size_t i = 0; i < num_runs; i++) {
+        element_processor_with_lambda_function_3_fields.for_each_element([](const Eigen::Matrix<double, Eigen::Dynamic, 3, Eigen::RowMajor, 8, 3> &field0_data_to_gather, const Eigen::Matrix<double, Eigen::Dynamic, 3, Eigen::RowMajor, 8, 3> &field1_data_to_gather, const Eigen::Matrix<double, Eigen::Dynamic, 3, Eigen::RowMajor, 8, 3> &field2_data_to_gather, Eigen::Matrix<double, Eigen::Dynamic, 3, Eigen::RowMajor, 8, 3> &result) {
+            SomeElementFunction(field0_data_to_gather, field1_data_to_gather, field2_data_to_gather, result);
+        });
+    }
+    end = std::chrono::high_resolution_clock::now();
+    elapsed_seconds = end - start;
+    std::cout << elapsed_seconds.count() << "s. Elapsed time (Node Processor with Lambda Function. 3 fields)\n";
 
     CheckForces();
 }
