@@ -50,6 +50,18 @@ ENDIF()
 
 project(aperi-snippets)
 
+### EIGEN ###
+MESSAGE("   EIGEN_PATH = ${EIGEN_PATH}")
+find_package(Eigen3 REQUIRED PATHS ${EIGEN_PATH}/lib/cmake/eigen3 ${EIGEN_PATH} NO_DEFAULT_PATH)
+
+IF(Eigen3_FOUND)
+    MESSAGE("   Eigen3_DIR = ${Eigen3_DIR}")
+    MESSAGE("    Eigen3_INCLUDE_DIR = ${EIGEN3_INCLUDE_DIR}")
+    MESSAGE("    Eigen3_LIBRARIES = ${EIGEN3_LIBRARIES}")
+ELSE()
+    MESSAGE(FATAL_ERROR "Could not find Eigen3!")
+ENDIF()
+
 ### apperi-snippets ###
 file(GLOB LIB_SOURCES "src/*.cpp")
 
@@ -59,6 +71,7 @@ set_property( TARGET libaperi-snippets PROPERTY CXX_STANDARD 11 )
 set_property( TARGET libaperi-snippets PROPERTY CXX_STANDARD_REQUIRED ON )
 
 target_link_libraries(libaperi-snippets
+            Eigen3::Eigen
 			${Trilinos_LIBRARIES}
 			${Trilinos_TPL_LIBRARIES}
             ${EXTRA_LIBS}

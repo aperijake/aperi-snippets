@@ -85,13 +85,13 @@ void BenchmarkNodeProcessing() {
     mesh_reader.populate_bulk_data();
 
     // Create a benchmarking object
-    Benchmarking benchmarking(p_bulk.get());
+    NodeProcessingBenchmarking benchmarking(p_bulk.get());
 
     // Run the benchmarking
     benchmarking.Run();
 }
 
-void Benchmarking::FillFields() {
+void NodeProcessingBenchmarking::FillFields() {
     size_t num_values_per_node = 3;  // Number of values per node
 
     // Create a random number generator
@@ -119,7 +119,7 @@ void Benchmarking::FillFields() {
     }
 }
 
-void Benchmarking::DirectFunction(double time_increment) {
+void NodeProcessingBenchmarking::DirectFunction(double time_increment) {
     size_t num_values_per_node = 3;  // Number of values per node
 
     // Loop over all the buckets
@@ -139,7 +139,7 @@ void Benchmarking::DirectFunction(double time_increment) {
     }
 }
 
-void Benchmarking::Run() {
+void NodeProcessingBenchmarking::Run() {
     double time_increment = 0.123;
     size_t num_runs = 100000;
     std::cout << std::scientific << std::setprecision(6);  // Set output to scientific notation and 6 digits of precision

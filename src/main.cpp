@@ -2,11 +2,13 @@
 
 #include <iostream>
 
+#include "ElementProcessing.h"
 #include "NodeProcessing.h"
 
 void RunTest() {
     // Run the benchmarking test
-    BenchmarkNodeProcessing();
+    // BenchmarkNodeProcessing();
+    BenchmarkElementProcessing();
 }
 
 int main(int argc, char* argv[]) {

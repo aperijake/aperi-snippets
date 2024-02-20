@@ -30,8 +30,9 @@ spacktivate aperi-snippets
 
 ```bash
 # If needed, specify a specific compiler. For example, add `%gcc@11.4.0` at the end of the `spack add` commands
-# Add Trilinos
+# Add Trilinos and eigen
 spack add trilinos +boost +exodus +gtest +hdf5 +stk +zoltan +zoltan2
+spack add eigen
 
 # Install Packages
 spack install
@@ -72,8 +73,9 @@ ln -s /opt/homebrew/bin/gcov-13 /opt/homebrew/bin/gcov
 Also, had some trouble with `openblas` and `gcc`. Compiled `openblas` with `apple-clang`. The commands are:
 
 ```bash
-# Add Trilinos, googletest, lcov, yaml-cpp, and eigen
+# Add Trilinos and eigen
 spack add trilinos +boost +exodus +gtest +hdf5 +stk +zoltan +zoltan2 %gcc ^openblas%apple-clang
+spack add eigen %gcc@13.2.0
 
 # Install Packages
 spack install

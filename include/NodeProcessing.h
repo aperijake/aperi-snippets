@@ -481,11 +481,11 @@ class NodeProcessorWithLambdaFunctionNoTemplateDerived : public NodeProcessorWit
     stk::mesh::BulkData *m_bulk_data;             ///< The bulk data object.
 };
 
-class Benchmarking {
+class NodeProcessingBenchmarking {
     typedef stk::mesh::Field<double> DoubleField;
 
    public:
-    Benchmarking(stk::mesh::BulkData *bulk_data) : bulk_data(bulk_data) {
+    NodeProcessingBenchmarking(stk::mesh::BulkData *bulk_data) : bulk_data(bulk_data) {
         meta_data = &bulk_data->mesh_meta_data();
         // Get the velocity and acceleration fields
         velocity_field = meta_data->get_field<double>(stk::topology::NODE_RANK, "velocity");
@@ -498,7 +498,7 @@ class Benchmarking {
     }
     void FillFields();
 
-    ~Benchmarking() {}
+    ~NodeProcessingBenchmarking() {}
 
     void Run();
 
