@@ -2,31 +2,40 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Release",
+      "name": "for_each_testing Release",
       "type": "lldb",
       "request": "launch",
-      "program": "${workspaceFolder}/build/aperi-snippets",
+      "program": "${workspaceFolder}/for_each_testing/build/for_each_testing",
       "args": ["input.yaml"],
-      "cwd": "${workspaceFolder}/build",
-      "preLaunchTask": "make"
+      "cwd": "${workspaceFolder}/for_each_testing/build",
+      "preLaunchTask": "make_for_each_testing"
     },
     {
-      "name": "ReleaseWithDebugInfo",
+      "name": "kokkos_basic Release",
       "type": "lldb",
       "request": "launch",
-      "program": "${workspaceFolder}/build/aperi-snippets_relwithdebinfo",
+      "program": "${workspaceFolder}/kokkos_basic/build/kokkos_basic",
       "args": ["input.yaml"],
-      "cwd": "${workspaceFolder}/build",
-      "preLaunchTask": "make_relwithdebinfo"
+      "cwd": "${workspaceFolder}/kokkos_basic/build",
+      "preLaunchTask": "make_kokkos_basic"
     },
     {
-      "name": "Debug",
+      "name": "stk_ngp_basic Release",
       "type": "lldb",
       "request": "launch",
-      "program": "${workspaceFolder}/build/aperi-snippets_debug",
+      "program": "${workspaceFolder}/stk_ngp_basic/build_gpu/stk_ngp_basic",
       "args": ["input.yaml"],
-      "cwd": "${workspaceFolder}/build",
-      "preLaunchTask": "make_debug"
+      "cwd": "${workspaceFolder}/stk_ngp_basic/build_gpu",
+      "preLaunchTask": "make_stk_ngp_basic"
+    },
+    {
+      "name": "for_each_testing Debug",
+      "type": "lldb",
+      "request": "launch",
+      "program": "${workspaceFolder}/for_each_testing/build/for_each_testing_debug",
+      "args": ["input.yaml"],
+      "cwd": "${workspaceFolder}/for_each_testing/build",
+      "preLaunchTask": "make_debug_for_each_testing"
     }
   ]
 }

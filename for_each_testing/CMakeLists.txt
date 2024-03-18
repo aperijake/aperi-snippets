@@ -48,7 +48,7 @@ IF(NOT CMAKE_C_COMPILER)
 SET(CMAKE_C_COMPILER ${Trilinos_C_COMPILER})
 ENDIF()
 
-project(aperi-snippets)
+project(for_each_testing)
 
 ### EIGEN ###
 MESSAGE("   EIGEN_PATH = ${EIGEN_PATH}")
@@ -62,15 +62,15 @@ ELSE()
     MESSAGE(FATAL_ERROR "Could not find Eigen3!")
 ENDIF()
 
-### apperi-snippets ###
+### for_each_testing ###
 file(GLOB LIB_SOURCES "src/*.cpp")
 
-add_library(libaperi-snippets ${LIB_SOURCES})
+add_library(libfor_each_testing ${LIB_SOURCES})
 
-set_property( TARGET libaperi-snippets PROPERTY CXX_STANDARD 11 )
-set_property( TARGET libaperi-snippets PROPERTY CXX_STANDARD_REQUIRED ON )
+set_property( TARGET libfor_each_testing PROPERTY CXX_STANDARD 11 )
+set_property( TARGET libfor_each_testing PROPERTY CXX_STANDARD_REQUIRED ON )
 
-target_link_libraries(libaperi-snippets
+target_link_libraries(libfor_each_testing
             Eigen3::Eigen
 			${Trilinos_LIBRARIES}
 			${Trilinos_TPL_LIBRARIES}
@@ -88,20 +88,20 @@ include_directories(${Trilinos_INCLUDE_DIRS})
 link_directories(${Trilinos_LIBRARY_DIRS})
 link_directories(${Trilinos_TPL_LIBRARY_DIRS})
 
-add_executable(aperi-snippets ${MAIN_SOURCES})
-target_link_libraries( aperi-snippets libaperi-snippets )
+add_executable(for_each_testing ${MAIN_SOURCES})
+target_link_libraries( for_each_testing libfor_each_testing )
 
-set_property( TARGET aperi-snippets PROPERTY CXX_STANDARD 11 )
-set_property( TARGET aperi-snippets PROPERTY CXX_STANDARD_REQUIRED ON )
+set_property( TARGET for_each_testing PROPERTY CXX_STANDARD 11 )
+set_property( TARGET for_each_testing PROPERTY CXX_STANDARD_REQUIRED ON )
 
 # Check the build type and set different executable names
 if(CMAKE_BUILD_TYPE STREQUAL "Release")
-    set_target_properties(aperi-snippets PROPERTIES OUTPUT_NAME "aperi-snippets")
-    set_target_properties(libaperi-snippets PROPERTIES OUTPUT_NAME "libaperi-snippets")
+    set_target_properties(for_each_testing PROPERTIES OUTPUT_NAME "for_each_testing")
+    set_target_properties(libfor_each_testing PROPERTIES OUTPUT_NAME "libfor_each_testing")
 elseif(CMAKE_BUILD_TYPE STREQUAL "Debug")
-    set_target_properties(aperi-snippets PROPERTIES OUTPUT_NAME "aperi-snippets_debug")
-    set_target_properties(libaperi-snippets PROPERTIES OUTPUT_NAME "libaperi-snippets_debug")
+    set_target_properties(for_each_testing PROPERTIES OUTPUT_NAME "for_each_testing_debug")
+    set_target_properties(libfor_each_testing PROPERTIES OUTPUT_NAME "libfor_each_testing_debug")
 elseif(CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
-    set_target_properties(aperi-snippets PROPERTIES OUTPUT_NAME "aperi-snippets_relwithdebinfo")
-    set_target_properties(libaperi-snippets PROPERTIES OUTPUT_NAME "libaperi-snippets_relwithdebinfo")
+    set_target_properties(for_each_testing PROPERTIES OUTPUT_NAME "for_each_testing_relwithdebinfo")
+    set_target_properties(libfor_each_testing PROPERTIES OUTPUT_NAME "libfor_each_testing_relwithdebinfo")
 endif()

@@ -1,7 +1,10 @@
 #!/bin/bash
 
+# eval $(spack env activate --sh aperi-mech-gpu)
+# eval $(spack env deactivate)
+
 mkdir -p build
-cd build
+cd build || exit
 cmake_command="cmake"
 cmake_command+=" -D KOKKOS_PATH:FILEPATH=$(spack location -i kokkos)"
 cmake_command+=" .."
