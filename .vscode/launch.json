@@ -23,17 +23,9 @@
       "name": "stk_ngp_basic Release",
       "type": "lldb",
       "request": "launch",
-      "program": "${workspaceFolder}/stk_ngp_basic/build_gpu_no_trilinos/stk_ngp_basic",
-      "cwd": "${workspaceFolder}/stk_ngp_basic/build_gpu_no_trilinos",
+      "program": "${workspaceFolder}/stk_ngp_basic/build_gpu/stk_ngp_basic",
+      "cwd": "${workspaceFolder}/stk_ngp_basic/build_gpu",
       "preLaunchTask": "make_stk_ngp_basic"
-    },
-    {
-      "name": "stk_ngp_basic_trilinos Release",
-      "type": "lldb",
-      "request": "launch",
-      "program": "${workspaceFolder}/stk_ngp_basic/build_gpu_trilinos/stk_ngp_basic",
-      "cwd": "${workspaceFolder}/stk_ngp_basic/build_gpu_trilinos",
-      "preLaunchTask": "make_stk_ngp_basic_trilinos"
     },
     {
       "name": "for_each_testing Debug",

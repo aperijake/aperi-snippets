@@ -25,25 +25,16 @@
       "command": "cd kokkos_basic; ./do_configure; cd build; make",
       "group": {
         "kind": "build",
-        "isDefault": true
+        "isDefault": false
       }
     },
     {
       "label": "make_stk_ngp_basic",
       "type": "shell",
-      "command": "spack env activate aperi-mech-gpu_2; cd stk_ngp_basic; ./do_configure --gpu; cd build_gpu_no_trilinos; make",
+      "command": "spack env activate aperi-mech-gpu_2; cd stk_ngp_basic; ./do_configure --gpu; cd build_gpu; make",
       "group": {
         "kind": "build",
-        "isDefault": true
-      }
-    },
-    {
-      "label": "make_stk_ngp_basic_trilinos",
-      "type": "shell",
-      "command": "spack env activate aperi-mech-gpu_2; cd stk_ngp_basic; ./do_configure --gpu --trilinos; cd build_gpu_trilinos; make",
-      "group": {
-        "kind": "build",
-        "isDefault": true
+        "isDefault": false
       }
     }
   ]
