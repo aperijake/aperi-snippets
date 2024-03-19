@@ -1,0 +1,90 @@
+#!/bin/bash
+
+set -e
+
+# Initialize variables with default values
+BUILD_TYPE="Release"
+GPU=false
+FIND_TRILINOS=false
+
+# Parse command-line options
+while [[ $# -gt 0 ]]; do
+	key="$1"
+	case ${key} in
+	-t | --build-type)
+		BUILD_TYPE="$2"
+		shift
+		shift
+		;;
+	-g | --gpu)
+		GPU=true
+		echo "Requested GPU support."
+		shift
+		;;
+	--trilinos)
+		FIND_TRILINOS=true
+		echo "Requested Trilinos."
+		shift
+		;;
+	*)
+		echo "Unknown option: $1"
+		exit 1
+		;;
+	esac
+done
+
+BUILD_DIR="build"
+
+if ${GPU}; then
+	# Activate Spack environment
+	# spack env activate --sh aperi-mech-gpu_2 || true
+	spack env activate aperi-mech-gpu_2
+	BUILD_DIR="build_gpu"
+else
+	# Activate Spack environment
+	spack env activate --sh aperi-mech || true
+fi
+
+if ${FIND_TRILINOS}; then
+	BUILD_DIR="${BUILD_DIR}_trilinos"
+else
+	BUILD_DIR="${BUILD_DIR}_no_trilinos"
+fi
+
+# Create build directory
+mkdir -p "${BUILD_DIR}"
+cd "${BUILD_DIR}" || exit
+
+# Remove CMakeCache if it exists
+rm -f CMakeCache.txt
+
+# Configure CMake with specified build type and other options
+cmake_command="cmake"
+cmake_command+=" -D FIND_TRILINOS:BOOL=${FIND_TRILINOS}"
+cmake_command+=" -D CMAKE_VERBOSE_MAKEFILE=ON"
+cmake_command+=" -D GPU:BOOL=${GPU}"
+# if ${GPU}; then
+#     cmake_command+=" -D Kokkos_ENABLE_CUDA=ON"
+# fi
+
+cmake_command+=" -D CMAKE_BUILD_TYPE:STRING=\"${BUILD_TYPE}\""
+cmake_command+=" -D TRILINOS_PATH:FILEPATH=$(spack location -i trilinos)"
+cmake_command+=" -D Kokkos_ROOT:FILEPATH=$(spack location -i kokkos)"
+
+# Add the cuda compiler to the cmake command
+if ${GPU}; then
+	cmake_command+=" -D CMAKE_CUDA_COMPILER:FILEPATH=$(spack location -i cuda)/bin/nvcc"
+	# CUDA_ROOT=$(spack location -i cuda)
+	# export CUDA_ROOT
+fi
+
+cmake_command+=" -D CMAKE_CXX_FLAGS:STRING='-Wall -pedantic -Wno-long-long -ftrapv -Wno-deprecated'"
+cmake_command+=" -D CMAKE_CXX_COMPILER=g++-10"
+
+cmake_command+=" .."
+
+# OMPI_CXX="$(spack location -i kokkos)/bin/nvcc_wrapper"
+# export OMPI_CXX
+
+echo "CMake Command: ${cmake_command}"
+eval "${cmake_command}"
