@@ -4,7 +4,11 @@
     {
       "label": "make_for_each_testing",
       "type": "shell",
-      "command": "cd for_each_testing; ./do_configure; cd build; make",
+      "command": "bash",
+      "args": [
+        "-c",
+        "spack env activate aperi-mech && cd for_each_testing && ./do_configure && cd build && make"
+      ],
       "group": {
         "kind": "build",
         "isDefault": true
@@ -13,7 +17,11 @@
     {
       "label": "make_debug_for_each_testing",
       "type": "shell",
-      "command": "cd for_each_testing; ./do_configure --build-type Debug; cd build; make",
+      "command": "bash",
+      "args": [
+        "-c",
+        "spack env activate aperi-mech && cd for_each_testing && ./do_configure --build-type Debug && cd build && make"
+      ],
       "group": {
         "kind": "build",
         "isDefault": false
@@ -22,7 +30,11 @@
     {
       "label": "make_kokkos_basic",
       "type": "shell",
-      "command": "cd kokkos_basic; ./do_configure; cd build; make",
+      "command": "bash",
+      "args": [
+        "-c",
+        "spack env activate aperi-mech-gpu_2 && cd kokkos_basic && ./do_configure && cd build && make"
+      ],
       "group": {
         "kind": "build",
         "isDefault": false
@@ -31,7 +43,11 @@
     {
       "label": "make_stk_ngp_basic",
       "type": "shell",
-      "command": "spack env activate aperi-mech-gpu_2; cd stk_ngp_basic; ./do_configure --gpu; cd build_gpu; make",
+      "command": "bash",
+      "args": [
+        "-c",
+        "spack env activate aperi-mech-gpu_2 && cd stk_ngp_basic && ./do_configure --gpu && cd build_gpu && make"
+      ],
       "group": {
         "kind": "build",
         "isDefault": false

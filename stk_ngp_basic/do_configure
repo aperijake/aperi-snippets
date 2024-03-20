@@ -1,5 +1,4 @@
 #!/bin/bash
-
 set -e
 
 # Initialize variables with default values
@@ -27,14 +26,12 @@ while [[ $# -gt 0 ]]; do
 	esac
 done
 
-BUILD_DIR="build"
-
+# Set build directory and Spack environment based on GPU option
 if ${GPU}; then
-	# Activate Spack environment
-	spack env activate aperi-mech-gpu_2
 	BUILD_DIR="build_gpu"
+	spack env activate aperi-mech-gpu_2
 else
-	# Activate Spack environment
+	BUILD_DIR="build"
 	spack env activate aperi-mech
 fi
 
@@ -43,29 +40,33 @@ mkdir -p "${BUILD_DIR}"
 cd "${BUILD_DIR}" || exit
 
 # Remove CMakeCache if it exists
-rm -f CMakeCache.txt
+[[ -f CMakeCache.txt ]] && rm CMakeCache.txt
 
 # Configure CMake with specified build type and other options
 cmake_command="cmake"
-cmake_command+=" -D CMAKE_VERBOSE_MAKEFILE=ON"
 cmake_command+=" -D GPU:BOOL=${GPU}"
-
 cmake_command+=" -D CMAKE_BUILD_TYPE:STRING=\"${BUILD_TYPE}\""
 cmake_command+=" -D TRILINOS_PATH:FILEPATH=$(spack location -i trilinos)"
 cmake_command+=" -D Kokkos_ROOT:FILEPATH=$(spack location -i kokkos)"
 
 # Add the cuda compiler to the cmake command
-if ${GPU}; then
-	cmake_command+=" -D CMAKE_CUDA_COMPILER:FILEPATH=$(spack location -i cuda)/bin/nvcc"
-fi
+[[ ${GPU} == true ]] && cmake_command+=" -D CMAKE_CUDA_COMPILER:FILEPATH=$(spack location -i cuda)/bin/nvcc"
 
+# Add the C++ compiler to the cmake command. There has got to be a better way to do this.
+kokkos_compiler=$(spack find kokkos | grep -o 'kokkos%[^ ]*' | sed 's/kokkos%//')
+kokkos_cxx_path=$(spack compiler info "${kokkos_compiler}" | grep 'cxx' | awk '{print $3}' | grep -v '^$')
+cmake_command+=" -D CMAKE_CXX_COMPILER:FILEPATH=${kokkos_cxx_path}"
+
+# Add the C compiler to the cmake command. Also, there has got to be a better way to do this.
+kokkos_c_path=$(spack compiler info "${kokkos_compiler}" | grep 'cc' | awk '{print $3}' | grep -v '^$')
+cmake_command+=" -D CMAKE_C_COMPILER:FILEPATH=${kokkos_c_path}"
+
+# Add the C++ flags to the cmake command
 cmake_command+=" -D CMAKE_CXX_FLAGS:STRING='-Wall -pedantic -Wno-long-long -ftrapv -Wno-deprecated'"
-cmake_command+=" -D CMAKE_CXX_COMPILER=g++-10"
 
+# Add the path to the stk_ngp_basic source code
 cmake_command+=" .."
 
-# OMPI_CXX="$(spack location -i kokkos)/bin/nvcc_wrapper"
-# export OMPI_CXX
-
+# Print and execute the cmake command
 echo "CMake Command: ${cmake_command}"
 eval "${cmake_command}"
