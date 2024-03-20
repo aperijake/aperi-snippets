@@ -6,7 +6,6 @@
       "type": "lldb",
       "request": "launch",
       "program": "${workspaceFolder}/for_each_testing/build/for_each_testing",
-      "args": ["input.yaml"],
       "cwd": "${workspaceFolder}/for_each_testing/build",
       "preLaunchTask": "make_for_each_testing"
     },
@@ -15,7 +14,6 @@
       "type": "lldb",
       "request": "launch",
       "program": "${workspaceFolder}/kokkos_basic/build/kokkos_basic",
-      "args": ["input.yaml"],
       "cwd": "${workspaceFolder}/kokkos_basic/build",
       "preLaunchTask": "make_kokkos_basic"
     },
@@ -40,7 +38,6 @@
       "type": "lldb",
       "request": "launch",
       "program": "${workspaceFolder}/for_each_testing/build/for_each_testing_debug",
-      "args": ["input.yaml"],
       "cwd": "${workspaceFolder}/for_each_testing/build",
       "preLaunchTask": "make_debug_for_each_testing"
     }
