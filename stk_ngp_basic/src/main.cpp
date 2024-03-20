@@ -1,39 +1,9 @@
-// #include <mpi.h>
-// #include <iostream>
-//
-// int main(int argc, char* argv[]) {
-//     // Initialize MPI and get communicator for the current process
-//     MPI_Init(&argc, &argv);
-//     MPI_Comm comm = MPI_COMM_WORLD;
-//
-//     // Get size of the current process
-//     int size;
-//     MPI_Comm_size(comm, &size);
-//
-//     // Print number of processes
-//     std::cout << "Running on " << size << " processes." << std::endl;
-//
-//     // Get input filename from command-line argument
-//     std::string input_filename = argv[1];
-//
-//     // Run the application
-//     // RunApplication(input_filename, comm);
-//
-//     std::cout << "stk ngp hello world example finished successfully!" << std::endl;
-//
-//     // Finalize MPI and clean up
-//     MPI_Finalize();
-//
-//     return 0;
-// }
+#include <mpi.h>
 
 #include <Kokkos_Core.hpp>
 #include <iostream>
 
-int main() {
-    // Initialize Kokkos
-    Kokkos::initialize();
-
+void HelloWorld() {
     // Scope to enforce destruction of Kokkos execution space
     {
         printf("Default Kokkos execution space %s\n", typeid(Kokkos::DefaultExecutionSpace).name());
@@ -52,9 +22,30 @@ int main() {
                 printf("Hello from the cpu %d\n", i);
             });
     }
+}
 
-    // Finalize Kokkos
+int main(int argc, char* argv[]) {
+    // Initialize Kokkos and MPI
+    Kokkos::initialize();
+    MPI_Init(&argc, &argv);
+
+    MPI_Comm comm = MPI_COMM_WORLD;
+
+    // Get size of the current process
+    int size;
+    MPI_Comm_size(comm, &size);
+
+    // Print number of processes
+    std::cout << "Running on " << size << " processes." << std::endl;
+
+    // Run the application
+    HelloWorld();
+
+    std::cout << "stk ngp hello world example finished successfully!" << std::endl;
+
+    // Finalize Kokkos and MPI
     Kokkos::finalize();
+    MPI_Finalize();
 
     return 0;
 }
