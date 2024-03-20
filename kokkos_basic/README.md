@@ -1,6 +1,6 @@
-# stk_ngp_basic
+# kokkos_basic
 
-Basic "hello world" testing for `stk` on the GPU
+Basic "hello world" testing for `kokkos`
 
 ## Building with Spack
 
@@ -32,9 +32,8 @@ spacktivate stk-ngp-basic
 
 ```bash
 # If needed, specify a specific compiler. For example, add `%gcc@10.5.0` at the end of the `spack add` commands
-# Add kokkos and Trilinos, adjust cuda_arch as needed for your GPU device
+# Add kokkos, adjust cuda_arch as needed for your GPU device
 spack add kokkos +cuda +cuda_lambda +cuda_relocatable_device_code ~cuda_uvm ~shared +wrapper cuda_arch=75 cxxstd=17
-spack add trilinos +boost +cuda +cuda_rdc +exodus +gtest +hdf5 ~shared +stk ~uvm +wrapper +zoltan +zoltan2 cuda_arch=75 cxxstd=17
 
 # Install Packages
 spack install
@@ -44,9 +43,8 @@ spack install
 
 ```bash
 # If needed, specify a specific compiler. For example, add `%gcc@10.5.0` at the end of the `spack add` commands
-# Add kokkos and Trilinos
+# Add kokkos
 spack add kokkos ~cuda ~shared cxxstd=17
-spack add trilinos +boost ~cuda +exodus +gtest +hdf5 ~shared +stk +wrapper +zoltan +zoltan2 cxxstd=17
 
 # Install Packages
 spack install

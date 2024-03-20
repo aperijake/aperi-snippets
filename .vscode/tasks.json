@@ -33,7 +33,20 @@
       "command": "bash",
       "args": [
         "-c",
-        "spack env activate aperi-mech-gpu && cd kokkos_basic && ./do_configure && cd build && make"
+        "spack env activate aperi-mech-gpu && cd kokkos_basic && ./do_configure --gpu && cd build_gpu && make"
+      ],
+      "group": {
+        "kind": "build",
+        "isDefault": false
+      }
+    },
+    {
+      "label": "make_kokkos_basic_no_gpu",
+      "type": "shell",
+      "command": "bash",
+      "args": [
+        "-c",
+        "spack env activate aperi-mech && cd kokkos_basic && ./do_configure && cd build && make"
       ],
       "group": {
         "kind": "build",

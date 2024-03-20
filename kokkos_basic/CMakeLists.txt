@@ -1,25 +1,38 @@
 cmake_minimum_required(VERSION 3.12)
-project(kokkos_basic LANGUAGES CXX CUDA)
+project(kokkos_basic)
 
-MESSAGE("   KOKKOS_PATH = ${KOKKOS_PATH}")
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CUDA_STANDARD 17)
 
-# Find Kokkos
-find_package(Kokkos PATHS ${KOKKOS_PATH} REQUIRED)
+# Set the project languages
+enable_language(CXX)
 
-# Add executable
-add_executable(kokkos_basic main.cpp)
+IF(GPU)
+  enable_language(CUDA)
+  set(CUDA_SEPARABLE_COMPILATION ON)
+ENDIF()
 
-# Include Kokkos headers
-target_include_directories(kokkos_basic PRIVATE ${Kokkos_INCLUDE_DIRS})
+# Set the path to project-specific custom modules
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 
-# Link against Kokkos
-target_link_libraries(kokkos_basic PRIVATE Kokkos::kokkos)
+# Find packages
+find_package(Kokkos REQUIRED PATHS ${Kokkos_ROOT})
 
-# Set CUDA as the language for this project
-# enable_language(CUDA)
+# kokkos_basic
+file(GLOB MAIN_SOURCES "src/*.cpp")
+add_executable(kokkos_basic ${MAIN_SOURCES})
 
-# Set the CUDA architecture (adjust based on your GPU)
-target_compile_options(kokkos_basic PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:-arch=sm_75>)
+target_include_directories(kokkos_basic PRIVATE
+    "${CMAKE_SOURCE_DIR}/include/"
+    ${Kokkos_INCLUDE_DIRS}
+)
 
-# Set the CUDA standard to 14, compatible with Kokkos
-set_property(TARGET kokkos_basic PROPERTY CUDA_STANDARD 14)
+target_link_libraries(kokkos_basic
+    Kokkos::kokkos
+)
+
+# Check the build type and set different executable names
+set_target_properties(kokkos_basic PROPERTIES
+    OUTPUT_NAME "kokkos_basic$<$<CONFIG:Debug>:_debug>$<$<CONFIG:RelWithDebInfo>:_relwithdebinfo>"
+)

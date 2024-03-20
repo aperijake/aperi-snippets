@@ -20,7 +20,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 # Activate Spack environment
-eval $(spack env activate --sh aperi-snippets)
+eval $(spack env activate --sh aperi-mech)
 
 # Create build directory
 mkdir -p build

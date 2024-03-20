@@ -1,12 +1,74 @@
 #!/bin/bash
+set -e
 
-# eval $(spack env activate --sh aperi-mech-gpu)
-# eval $(spack env deactivate)
+# Initialize variables with default values
+BUILD_TYPE="Release"
+GPU=false
 
-mkdir -p build
-cd build || exit
+# Parse command-line options
+while [[ $# -gt 0 ]]; do
+	key="$1"
+	case ${key} in
+	-t | --build-type)
+		BUILD_TYPE="$2"
+		shift
+		shift
+		;;
+	-g | --gpu)
+		GPU=true
+		echo "Requested GPU support."
+		shift
+		;;
+	*)
+		echo "Unknown option: $1"
+		exit 1
+		;;
+	esac
+done
+
+# Set build directory and Spack environment based on GPU option
+if ${GPU}; then
+	BUILD_DIR="build_gpu"
+	spack env activate aperi-mech-gpu
+else
+	BUILD_DIR="build"
+	spack env activate aperi-mech
+fi
+
+# Create build directory
+mkdir -p "${BUILD_DIR}"
+cd "${BUILD_DIR}" || exit
+
+# Remove CMakeCache if it exists
+[[ -f CMakeCache.txt ]] && rm CMakeCache.txt
+
+# Configure CMake with specified build type and other options
 cmake_command="cmake"
-cmake_command+=" -D KOKKOS_PATH:FILEPATH=$(spack location -i kokkos)"
+cmake_command+=" -D GPU:BOOL=${GPU}"
+cmake_command+=" -D CMAKE_BUILD_TYPE:STRING=\"${BUILD_TYPE}\""
+cmake_command+=" -D Kokkos_ROOT:FILEPATH=$(spack location -i kokkos)"
+
+# Add the cuda compiler to the cmake command
+[[ ${GPU} == true ]] && cmake_command+=" -D CMAKE_CUDA_COMPILER:FILEPATH=$(spack location -i cuda)/bin/nvcc"
+
+# Add the cuda flags to the cmake command. There has got to be a better way to do this. Needed?
+[[ ${GPU} == true ]] && cmake_command+=" -D CMAKE_CUDA_FLAGS=\"-arch=sm_$(spack find kokkos | grep 'cuda_arch=' | awk -F'cuda_arch=' 'NR==1 {print $2}' | awk '{print $1}')\""
+
+# Add the C++ compiler to the cmake command. There has got to be a better way to do this.
+kokkos_compiler=$(spack find kokkos | grep -o 'kokkos%[^ ]*' | sed 's/kokkos%//')
+kokkos_cxx_path=$(spack compiler info "${kokkos_compiler}" | grep 'cxx' | awk '{print $3}' | grep -v '^$')
+cmake_command+=" -D CMAKE_CXX_COMPILER:FILEPATH=${kokkos_cxx_path}"
+
+# Add the C compiler to the cmake command. Also, there has got to be a better way to do this.
+kokkos_c_path=$(spack compiler info "${kokkos_compiler}" | grep 'cc' | awk '{print $3}' | grep -v '^$')
+cmake_command+=" -D CMAKE_C_COMPILER:FILEPATH=${kokkos_c_path}"
+
+# Add the C++ flags to the cmake command
+cmake_command+=" -D CMAKE_CXX_FLAGS:STRING='-Wall -pedantic -Wno-long-long -ftrapv -Wno-deprecated'"
+
+# Add the path to the source code
 cmake_command+=" .."
+
+# Print and execute the cmake command
+echo "CMake Command: ${cmake_command}"
 eval "${cmake_command}"
-make

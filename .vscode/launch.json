@@ -13,9 +13,17 @@
       "name": "kokkos_basic Release",
       "type": "lldb",
       "request": "launch",
+      "program": "${workspaceFolder}/kokkos_basic/build_gpu/kokkos_basic",
+      "cwd": "${workspaceFolder}/kokkos_basic/build_gpu",
+      "preLaunchTask": "make_kokkos_basic"
+    },
+    {
+      "name": "kokkos_basic no GPU Release",
+      "type": "lldb",
+      "request": "launch",
       "program": "${workspaceFolder}/kokkos_basic/build/kokkos_basic",
       "cwd": "${workspaceFolder}/kokkos_basic/build",
-      "preLaunchTask": "make_kokkos_basic"
+      "preLaunchTask": "make_kokkos_basic_no_gpu"
     },
     {
       "name": "stk_ngp_basic Release",
