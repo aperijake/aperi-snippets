@@ -29,7 +29,7 @@ done
 # Set build directory and Spack environment based on GPU option
 if ${GPU}; then
 	BUILD_DIR="build_gpu"
-	spack env activate aperi-mech-gpu_2
+	spack env activate aperi-mech-gpu
 else
 	BUILD_DIR="build"
 	spack env activate aperi-mech
