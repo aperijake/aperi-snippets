@@ -52,6 +52,9 @@ cmake_command+=" -D Kokkos_ROOT:FILEPATH=$(spack location -i kokkos)"
 # Add the cuda compiler to the cmake command
 [[ ${GPU} == true ]] && cmake_command+=" -D CMAKE_CUDA_COMPILER:FILEPATH=$(spack location -i cuda)/bin/nvcc"
 
+# Add the cuda flags to the cmake command. There has got to be a better way to do this. Needed?
+[[ ${GPU} == true ]] && cmake_command+=" -D CMAKE_CUDA_FLAGS=\"-arch=sm_$(spack find kokkos | grep 'cuda_arch=' | awk -F'cuda_arch=' 'NR==1 {print $2}' | awk '{print $1}')\""
+
 # Add the C++ compiler to the cmake command. There has got to be a better way to do this.
 kokkos_compiler=$(spack find kokkos | grep -o 'kokkos%[^ ]*' | sed 's/kokkos%//')
 kokkos_cxx_path=$(spack compiler info "${kokkos_compiler}" | grep 'cxx' | awk '{print $3}' | grep -v '^$')
