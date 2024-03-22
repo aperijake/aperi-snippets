@@ -42,8 +42,16 @@ cd "${BUILD_DIR}" || exit
 # Remove CMakeCache if it exists
 [[ -f CMakeCache.txt ]] && rm CMakeCache.txt
 
+# Check for cmake in the spack environment, if not found, use the system cmake
+if spack find -p cmake; then
+	cmake=$(spack location -i cmake)/bin/cmake
+else
+	cmake=cmake
+fi
+
 # Configure CMake with specified build type and other options
-cmake_command="cmake"
+cmake_command="${cmake}"
+
 cmake_command+=" -D GPU:BOOL=${GPU}"
 cmake_command+=" -D CMAKE_BUILD_TYPE:STRING=\"${BUILD_TYPE}\""
 cmake_command+=" -D TRILINOS_PATH:FILEPATH=$(spack location -i trilinos)"

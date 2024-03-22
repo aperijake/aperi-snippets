@@ -59,3 +59,13 @@ spack install
 Successfully installed on an AWS EC2 g4dn.xlarge (NVIDIA T4 GPU) Ubuntu 22.04 system using `apt-get` to install prerequisites:
 
 - `gcc@10.5.0`
+
+Also, to update the nvidia drivers:
+
+```bash
+sudo ubuntu-drivers install --gpgpu
+```
+
+#### Ubuntu 20.04, x86_64, Azure VM Standard NC4as T4 v3 (4 vcpus, 28 GiB memory)
+
+Followed same procedure as the AWS EC2 instance above.

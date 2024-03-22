@@ -56,6 +56,14 @@
       "program": "${workspaceFolder}/for_each_testing/build/for_each_testing_debug",
       "cwd": "${workspaceFolder}/for_each_testing/build",
       "preLaunchTask": "make_debug_for_each_testing"
+    },
+    {
+      "name": "kokkos_basic Debug",
+      "type": "lldb",
+      "request": "launch",
+      "program": "${workspaceFolder}/kokkos_basic/build_gpu/kokkos_basic_debug",
+      "cwd": "${workspaceFolder}/kokkos_basic/build_gpu",
+      "preLaunchTask": "make_debug_kokkos_basic"
     }
   ]
 }

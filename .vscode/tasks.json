@@ -41,6 +41,19 @@
       }
     },
     {
+      "label": "make_debug_kokkos_basic",
+      "type": "shell",
+      "command": "bash",
+      "args": [
+        "-c",
+        "spack env activate aperi-mech-gpu && cd kokkos_basic && ./do_configure --gpu --build-type Debug && cd build_gpu && make"
+      ],
+      "group": {
+        "kind": "build",
+        "isDefault": false
+      }
+    },
+    {
       "label": "make_kokkos_basic_no_gpu",
       "type": "shell",
       "command": "bash",
