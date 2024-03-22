@@ -3,6 +3,8 @@
 #include <Kokkos_Core.hpp>
 #include <iostream>
 
+#include "Loop.h"
+
 void HelloWorld() {
     // Scope to enforce destruction of Kokkos execution space
     {
@@ -26,6 +28,11 @@ void HelloWorld() {
     }
 }
 
+void RunTest() {
+    // Run the benchmarking test
+    BenchmarkNodeProcessing();
+}
+
 int main(int argc, char* argv[]) {
     // Initialize Kokkos and MPI
     Kokkos::initialize();
@@ -42,6 +49,9 @@ int main(int argc, char* argv[]) {
 
     // Run the application
     HelloWorld();
+
+    // Run the application
+    RunTest();
 
     std::cout << "stk ngp hello world example finished successfully!" << std::endl;
 

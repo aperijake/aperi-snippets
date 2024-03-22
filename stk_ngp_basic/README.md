@@ -35,6 +35,7 @@ spacktivate stk-ngp-basic
 # Add kokkos and Trilinos, adjust cuda_arch as needed for your GPU device
 spack add kokkos +cuda +cuda_lambda +cuda_relocatable_device_code ~cuda_uvm ~shared +wrapper cuda_arch=75 cxxstd=17
 spack add trilinos +boost +cuda +cuda_rdc +exodus +gtest +hdf5 ~shared +stk ~uvm +wrapper +zoltan +zoltan2 cuda_arch=75 cxxstd=17
+spack add eigen
 
 # Install Packages
 spack install
@@ -47,6 +48,7 @@ spack install
 # Add kokkos and Trilinos
 spack add kokkos ~cuda ~shared cxxstd=17
 spack add trilinos +boost ~cuda +exodus +gtest +hdf5 ~shared +stk +wrapper +zoltan +zoltan2 cxxstd=17
+spack add eigen
 
 # Install Packages
 spack install

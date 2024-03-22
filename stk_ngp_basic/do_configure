@@ -48,6 +48,7 @@ cmake_command+=" -D GPU:BOOL=${GPU}"
 cmake_command+=" -D CMAKE_BUILD_TYPE:STRING=\"${BUILD_TYPE}\""
 cmake_command+=" -D TRILINOS_PATH:FILEPATH=$(spack location -i trilinos)"
 cmake_command+=" -D Kokkos_ROOT:FILEPATH=$(spack location -i kokkos)"
+cmake_command+=" -D EIGEN_PATH:FILEPATH=$(spack location -i eigen)"
 
 # Add the cuda compiler to the cmake command
 [[ ${GPU} == true ]] && cmake_command+=" -D CMAKE_CUDA_COMPILER:FILEPATH=$(spack location -i cuda)/bin/nvcc"

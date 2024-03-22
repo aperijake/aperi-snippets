@@ -20,6 +20,7 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 find_package(Kokkos REQUIRED PATHS ${Kokkos_ROOT})
 find_package(Trilinos REQUIRED PATHS ${TRILINOS_PATH}/lib/cmake/Trilinos ${TRILINOS_PATH})
 find_package(MPI REQUIRED)
+find_package(Eigen3 REQUIRED PATHS ${EIGEN_PATH}/lib/cmake/eigen3 ${EIGEN_PATH})
 
 # stk_ngp_basic
 file(GLOB MAIN_SOURCES "src/*.cpp")
@@ -34,6 +35,7 @@ target_include_directories(stk_ngp_basic PRIVATE
 
 target_link_libraries(stk_ngp_basic
     Kokkos::kokkos
+    Eigen3::Eigen
     ${Trilinos_LIBRARIES}
     ${Trilinos_TPL_LIBRARIES}
     ${MPI_LIBRARIES}

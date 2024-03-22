@@ -78,6 +78,19 @@
         "kind": "build",
         "isDefault": false
       }
+    },
+    {
+      "label": "make_stk_ngp_basic_no_gpu_debug",
+      "type": "shell",
+      "command": "bash",
+      "args": [
+        "-c",
+        "spack env activate aperi-mech && cd stk_ngp_basic && ./do_configure --build-type Debug && cd build && make"
+      ],
+      "group": {
+        "kind": "build",
+        "isDefault": false
+      }
     }
   ]
 }

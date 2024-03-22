@@ -42,6 +42,14 @@
       "preLaunchTask": "make_stk_ngp_basic_no_gpu"
     },
     {
+      "name": "stk_ngp_basic no GPU Debug",
+      "type": "lldb",
+      "request": "launch",
+      "program": "${workspaceFolder}/stk_ngp_basic/build/stk_ngp_basic_debug",
+      "cwd": "${workspaceFolder}/stk_ngp_basic/build",
+      "preLaunchTask": "make_stk_ngp_basic_no_gpu_debug"
+    },
+    {
       "name": "for_each_testing Debug",
       "type": "lldb",
       "request": "launch",
