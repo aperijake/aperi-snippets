@@ -1,0 +1,13 @@
+{
+  "configurations": [
+    {
+      "name": "aperi-snippets",
+      "includePath": [
+        "${workspaceFolder}/**",
+        "/home/azureuser/projects/spack/opt/spack/linux-ubuntu20.04-zen2/gcc-10.5.0/**/include/",
+        "/home/azureuser/projects/spack/opt/spack/linux-ubuntu20.04-zen2/gcc-10.5.0/**/include/eigen3/"
+      ]
+    }
+  ],
+  "version": 4
+}
