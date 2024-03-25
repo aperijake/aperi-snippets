@@ -95,17 +95,21 @@ int main(int argc, char* argv[]) {
     int size;
     MPI_Comm_size(comm, &size);
 
+    // Print if running on GPU
+    Kokkos::DefaultExecutionSpace::concurrency() > 1 ? std::cout << "Running on GPU" << std::endl
+                                                     : std::cout << "Running on CPU" << std::endl;
+
     // Print number of processes
     std::cout << "Running on " << size << " processes." << std::endl;
 
-    // Run the application
-    HelloWorld();
+    // Run basic hello world
+    // HelloWorld();
 
-    // Run the application
+    // Run the loop test
     LoopTest();
 
     // Run the basic test
-    BasicNgpTest();
+    // BasicNgpTest();
 
     std::cout << "stk ngp hello world example finished successfully!" << std::endl;
 

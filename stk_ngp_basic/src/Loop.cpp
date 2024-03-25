@@ -40,7 +40,7 @@ void BenchmarkNodeProcessing() {
 
     stk::io::StkMeshIoBroker mesh_reader;
     mesh_reader.set_bulk_data(*p_bulk);
-    mesh_reader.add_mesh_database("generated:10x10x100", stk::io::READ_MESH);
+    mesh_reader.add_mesh_database("generated:10x10x10000", stk::io::READ_MESH);
     mesh_reader.create_input_mesh();
     mesh_reader.add_all_mesh_fields_as_input_fields();
 
@@ -114,7 +114,7 @@ void NodeProcessingBenchmarking::DirectFunction(double time_increment) {
 
 void NodeProcessingBenchmarking::Run() {
     double time_increment = 0.123;
-    size_t num_runs = 100000;
+    size_t num_runs = 1000;
     std::cout << std::scientific << std::setprecision(6);  // Set output to scientific notation and 6 digits of precision
 
     // Fill the fields with random values
@@ -163,14 +163,47 @@ void NodeProcessingBenchmarking::Run() {
 
     // ************************************************************************
     // Node processor with stk for_each_entity_run
-    const std::array<NgpDoubleField *, 3> ngp_fields = {ngp_velocity_field_n, ngp_acceleration_field_n, ngp_velocity_field_np1};
-    NodeProcessorWithStkMeshForEachEntityRun<3> node_processor_with_stk_mesh_for_each_entity_run = NodeProcessorWithStkMeshForEachEntityRun<3>(ngp_fields, ngp_mesh, universal_part);
+    // const std::array<NgpDoubleField *, 3> ngp_fields = {ngp_velocity_field_n, ngp_acceleration_field_n, ngp_velocity_field_np1};
+    // NodeProcessorWithStkMeshForEachEntityRun<3> node_processor_with_stk_mesh_for_each_entity_run = NodeProcessorWithStkMeshForEachEntityRun<3>(ngp_fields, ngp_mesh, universal_part);
+
+    // start = std::chrono::high_resolution_clock::now();
+    // for (size_t i = 0; i < num_runs; i++) {
+    //     node_processor_with_stk_mesh_for_each_entity_run.for_each_dof([&time_increment](std::array<double, 3> &field_data) {
+    //         field_data[2] = field_data[0] + time_increment * field_data[1];
+    //     });
+    // }
+    // end = std::chrono::high_resolution_clock::now();
+    // elapsed_seconds = end - start;
+    // std::cout << elapsed_seconds.count() << "s. Elapsed time (Node Processor with StkMeshForEachEntityRun)\n";
+
+    // ************************************************************************
+    // Node processor with stk for_each_entity_run
+
+    // STK QUESTION: When do I have to get the updated ngp field? Does "updated" mean that the mesh has changed or that the field has changed?
+    stk::mesh::NgpField<double> &ngp_vel_n = stk::mesh::get_updated_ngp_field<double>(*velocity_field_n);
+    stk::mesh::NgpField<double> &ngp_acc_n = stk::mesh::get_updated_ngp_field<double>(*acceleration_field_n);
+    stk::mesh::NgpField<double> &ngp_vel_np1 = stk::mesh::get_updated_ngp_field<double>(*velocity_field_np1);
 
     start = std::chrono::high_resolution_clock::now();
+    // Test as if we are running the time integration loop for num_runs iterations
     for (size_t i = 0; i < num_runs; i++) {
-        node_processor_with_stk_mesh_for_each_entity_run.for_each_dof([&time_increment](std::array<double, 3> &field_data) {
-            field_data[2] = field_data[0] + time_increment * field_data[1];
-        });
+        // Clear the sync state of the fields
+        ngp_velocity_field_n->clear_sync_state();
+        ngp_acceleration_field_n->clear_sync_state();
+        ngp_velocity_field_np1->clear_sync_state();
+
+        stk::mesh::for_each_entity_run(
+            *ngp_mesh, stk::topology::NODE_RANK, universal_part,
+            KOKKOS_LAMBDA(const stk::mesh::FastMeshIndex &entity) {
+                for (size_t j = 0; j < 3; j++) {
+                    ngp_vel_np1(entity, j) = ngp_vel_n(entity, j) + time_increment * ngp_acc_n(entity, j);
+                }
+            });
+
+        // Set modified on device
+        ngp_velocity_field_n->modify_on_device();
+        ngp_acceleration_field_n->modify_on_device();
+        ngp_velocity_field_np1->modify_on_device();
     }
     end = std::chrono::high_resolution_clock::now();
     elapsed_seconds = end - start;

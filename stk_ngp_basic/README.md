@@ -47,7 +47,7 @@ spack install
 # If needed, specify a specific compiler. For example, add `%gcc@10.5.0` at the end of the `spack add` commands
 # Add kokkos and Trilinos
 spack add kokkos ~cuda ~shared cxxstd=17
-spack add trilinos +boost ~cuda +exodus +gtest +hdf5 ~shared +stk +wrapper +zoltan +zoltan2 cxxstd=17
+spack add trilinos +boost ~cuda +exodus +gtest +hdf5 ~shared +stk +zoltan +zoltan2 cxxstd=17
 spack add eigen
 
 # Install Packages

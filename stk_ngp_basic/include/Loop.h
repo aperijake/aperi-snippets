@@ -98,46 +98,46 @@ class NodeProcessorWithLambdaFunction {
 };
 
 // A Node processor that use the stk::mesh::for_each_entity_run method to apply a lambda function to each degree of freedom of each node
-template <size_t N>
-class NodeProcessorWithStkMeshForEachEntityRun {
-    typedef stk::mesh::NgpField<double> NgpDoubleField;
-
-   public:
-    NodeProcessorWithStkMeshForEachEntityRun(const std::array<NgpDoubleField *, N> fields, stk::mesh::NgpMesh *ngp_mesh, stk::mesh::Selector selector)
-        : m_fields(fields), m_ngp_mesh(ngp_mesh), m_selector(selector) {}
-
-    // Loop over each node and apply the function
-    template <typename Func>
-    void for_each_dof(const Func &func) const {
-        size_t num_values_per_node = 3;    // Number of values per node
-        std::array<double, N> field_data;  // Array to hold field data
-
-        // Clear the sync state of the fields
-        for (size_t i = 0, e = m_fields.size(); i < e; ++i) {
-            m_fields[i]->clear_sync_state();
-        }
-        stk::mesh::for_each_entity_run(
-            m_ngp_mesh, stk::topology::NODE_RANK, m_selector,
-            KOKKOS_LAMBDA(const stk::mesh::FastMeshIndex &entity) {
-                for (size_t i = 0; i < num_values_per_node; i++) {
-                    for (size_t j = 0, e = m_fields.size(); j < e; ++j) {
-                        field_data[j] = m_fields[j](entity, i);
-                    }
-                    func(field_data);
-                }
-            });
-
-        // Set modified on device
-        for (size_t i = 0, e = m_fields.size(); i < e; ++i) {
-            m_fields[i]->modify_on_device();
-        }
-    }
-
-   private:
-    const std::array<NgpDoubleField *, N> m_fields;  // The fields to process
-    stk::mesh::NgpMesh *m_ngp_mesh;                  ///< The ngp mesh object.
-    stk::mesh::Selector m_selector;                  ///< The selector for the mesh
-};
+// template <size_t N>
+// class NodeProcessorWithStkMeshForEachEntityRun {
+//     typedef stk::mesh::NgpField<double> NgpDoubleField;
+//
+//    public:
+//     NodeProcessorWithStkMeshForEachEntityRun(const std::array<NgpDoubleField *, N> fields, stk::mesh::NgpMesh *ngp_mesh, stk::mesh::Selector selector)
+//         : m_fields(fields), m_ngp_mesh(ngp_mesh), m_selector(selector) {}
+//
+//     // Loop over each node and apply the function
+//     template <typename Func>
+//     void for_each_dof(const Func &func) const {
+//         size_t num_values_per_node = 3;    // Number of values per node
+//         std::array<double, N> field_data;  // Array to hold field data
+//
+//         // Clear the sync state of the fields
+//         for (size_t i = 0, e = m_fields.size(); i < e; ++i) {
+//             m_fields[i]->clear_sync_state();
+//         }
+//         stk::mesh::for_each_entity_run(
+//             m_ngp_mesh, stk::topology::NODE_RANK, m_selector,
+//             KOKKOS_LAMBDA(const stk::mesh::FastMeshIndex &entity) {
+//                 for (size_t i = 0; i < num_values_per_node; i++) {
+//                     for (size_t j = 0, e = m_fields.size(); j < e; ++j) {
+//                         field_data[j] = m_fields[j](entity, i);
+//                     }
+//                     func(field_data);
+//                 }
+//             });
+//
+//         // Set modified on device
+//         for (size_t i = 0, e = m_fields.size(); i < e; ++i) {
+//             m_fields[i]->modify_on_device();
+//         }
+//     }
+//
+//    private:
+//     const std::array<NgpDoubleField *, N> m_fields;  // The fields to process
+//     stk::mesh::NgpMesh *m_ngp_mesh;                  ///< The ngp mesh object.
+//     stk::mesh::Selector m_selector;                  ///< The selector for the mesh
+// };
 
 class NodeProcessingBenchmarking {
     typedef stk::mesh::Field<double> DoubleField;
