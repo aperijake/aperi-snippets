@@ -36,6 +36,7 @@ spacktivate stk-ngp-basic
 spack add kokkos +cuda +cuda_lambda +cuda_relocatable_device_code ~cuda_uvm ~shared +wrapper cuda_arch=75 cxxstd=17
 spack add trilinos +boost +cuda +cuda_rdc +exodus +gtest +hdf5 ~shared +stk ~uvm +wrapper +zoltan +zoltan2 cuda_arch=75 cxxstd=17
 spack add eigen
+spack add googletest
 
 # Install Packages
 spack install
@@ -49,6 +50,7 @@ spack install
 spack add kokkos ~cuda ~shared cxxstd=17
 spack add trilinos +boost ~cuda +exodus +gtest +hdf5 ~shared +stk +zoltan +zoltan2 cxxstd=17
 spack add eigen
+spack add googletest
 
 # Install Packages
 spack install

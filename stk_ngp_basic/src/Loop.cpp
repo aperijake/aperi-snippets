@@ -1,5 +1,7 @@
 #include "Loop.h"
 
+#include <gtest/gtest.h>
+
 #include <iostream>
 #include <random>
 #include <stk_io/StkMeshIoBroker.hpp>
@@ -30,39 +32,6 @@ Runtimes:
 - 4.625675e+00s. Elapsed time (Node Processor with Standard Function)
 - 9.985610e-01s. Elapsed time (Node Processor with Lambda Function)
 */
-
-// Benchmarking of different node loops
-void BenchmarkNodeProcessing() {
-    MPI_Comm communicator = MPI_COMM_WORLD;
-    std::shared_ptr<stk::mesh::BulkData> p_bulk = stk::mesh::MeshBuilder(communicator).create();
-    p_bulk->mesh_meta_data().use_simple_fields();
-    stk::mesh::MetaData &meta_data = p_bulk->mesh_meta_data();
-
-    stk::io::StkMeshIoBroker mesh_reader;
-    mesh_reader.set_bulk_data(*p_bulk);
-    mesh_reader.add_mesh_database("generated:10x10x10000", stk::io::READ_MESH);
-    mesh_reader.create_input_mesh();
-    mesh_reader.add_all_mesh_fields_as_input_fields();
-
-    // Create the fields
-    stk::mesh::FieldBase &velocity_field = meta_data.declare_field<double>(stk::topology::NODE_RANK, "velocity", 2);
-    stk::mesh::put_field_on_entire_mesh(velocity_field, 3);
-    stk::io::set_field_output_type(velocity_field, stk::io::FieldOutputType::VECTOR_3D);
-    stk::io::set_field_role(velocity_field, Ioss::Field::TRANSIENT);
-
-    stk::mesh::FieldBase &acceleration_field = meta_data.declare_field<double>(stk::topology::NODE_RANK, "acceleration", 2);
-    stk::mesh::put_field_on_entire_mesh(acceleration_field, 3);
-    stk::io::set_field_output_type(acceleration_field, stk::io::FieldOutputType::VECTOR_3D);
-    stk::io::set_field_role(acceleration_field, Ioss::Field::TRANSIENT);
-
-    mesh_reader.populate_bulk_data();
-
-    // Create a benchmarking object
-    NodeProcessingBenchmarking benchmarking(p_bulk.get());
-
-    // Run the benchmarking
-    benchmarking.Run();
-}
 
 void NodeProcessingBenchmarking::FillFields() {
     size_t num_values_per_node = 3;  // Number of values per node
@@ -208,4 +177,37 @@ void NodeProcessingBenchmarking::Run() {
     end = std::chrono::high_resolution_clock::now();
     elapsed_seconds = end - start;
     std::cout << elapsed_seconds.count() << "s. Elapsed time (Node Processor with StkMeshForEachEntityRun)\n";
+}
+
+// Benchmarking of different node loops
+TEST(NodeProcessingBenchmarking, TestNP) {
+    MPI_Comm communicator = MPI_COMM_WORLD;
+    std::shared_ptr<stk::mesh::BulkData> p_bulk = stk::mesh::MeshBuilder(communicator).create();
+    p_bulk->mesh_meta_data().use_simple_fields();
+    stk::mesh::MetaData &meta_data = p_bulk->mesh_meta_data();
+
+    stk::io::StkMeshIoBroker mesh_reader;
+    mesh_reader.set_bulk_data(*p_bulk);
+    mesh_reader.add_mesh_database("generated:10x10x10000", stk::io::READ_MESH);
+    mesh_reader.create_input_mesh();
+    mesh_reader.add_all_mesh_fields_as_input_fields();
+
+    // Create the fields
+    stk::mesh::FieldBase &velocity_field = meta_data.declare_field<double>(stk::topology::NODE_RANK, "velocity", 2);
+    stk::mesh::put_field_on_entire_mesh(velocity_field, 3);
+    stk::io::set_field_output_type(velocity_field, stk::io::FieldOutputType::VECTOR_3D);
+    stk::io::set_field_role(velocity_field, Ioss::Field::TRANSIENT);
+
+    stk::mesh::FieldBase &acceleration_field = meta_data.declare_field<double>(stk::topology::NODE_RANK, "acceleration", 2);
+    stk::mesh::put_field_on_entire_mesh(acceleration_field, 3);
+    stk::io::set_field_output_type(acceleration_field, stk::io::FieldOutputType::VECTOR_3D);
+    stk::io::set_field_role(acceleration_field, Ioss::Field::TRANSIENT);
+
+    mesh_reader.populate_bulk_data();
+
+    // Create a benchmarking object
+    NodeProcessingBenchmarking benchmarking(p_bulk.get());
+
+    // Run the benchmarking
+    benchmarking.Run();
 }
