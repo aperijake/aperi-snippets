@@ -17,7 +17,7 @@
 #include <stk_mesh/base/NgpField.hpp>
 #include <stk_mesh/base/Types.hpp>
 
-TEST(NgpHelloWorld, HelloWorld) {
+void RunHelloWorld() {
     // Scope to enforce destruction of Kokkos execution space
     bool is_gpu = Kokkos::DefaultExecutionSpace::concurrency() > 1;
 
@@ -38,7 +38,11 @@ TEST(NgpHelloWorld, HelloWorld) {
         });
 }
 
-TEST(NgpField, Fill) {
+TEST(NgpHelloWorld, HelloWorld) {
+    RunHelloWorld();
+}
+
+void RunFill() {
     if (stk::parallel_machine_size(MPI_COMM_WORLD) > 1) {
         return;
     }
@@ -73,4 +77,8 @@ TEST(NgpField, Fill) {
     int* data = stk::mesh::field_data(field, entity);
 
     EXPECT_EQ(data[0], fieldVal);
+}
+
+TEST(NgpField, Fill) {
+    RunFill();
 }
