@@ -16,10 +16,6 @@
 #include <stk_topology/topology.hpp>
 #include <vector>
 
-// Notes on things to test
-// Direct call in a function
-// Lambda in a function
-
 // A Node processor that applies a std::function to each degree of freedom of each node
 // Fields are passed in as an array of pointers at construction time
 // Function is passed in to the for_each_dof method
@@ -138,59 +134,3 @@ class NodeProcessorWithLambdaFunction {
 //     stk::mesh::NgpMesh *m_ngp_mesh;                  ///< The ngp mesh object.
 //     stk::mesh::Selector m_selector;                  ///< The selector for the mesh
 // };
-
-class NodeProcessingBenchmarking {
-    typedef stk::mesh::Field<double> DoubleField;
-    typedef stk::mesh::NgpField<double> NgpDoubleField;
-
-   public:
-    NodeProcessingBenchmarking(stk::mesh::BulkData *bulk_data) : bulk_data(bulk_data) {
-        meta_data = &bulk_data->mesh_meta_data();
-        // Get the velocity and acceleration fields
-        velocity_field = meta_data->get_field<double>(stk::topology::NODE_RANK, "velocity");
-        acceleration_field = meta_data->get_field<double>(stk::topology::NODE_RANK, "acceleration");
-
-        ngp_velocity_field = &stk::mesh::get_updated_ngp_field<double>(*velocity_field);
-        ngp_acceleration_field = &stk::mesh::get_updated_ngp_field<double>(*acceleration_field);
-
-        // Get the field states
-        velocity_field_n = &velocity_field->field_of_state(stk::mesh::StateN);
-        velocity_field_np1 = &velocity_field->field_of_state(stk::mesh::StateNP1);
-        acceleration_field_n = &acceleration_field->field_of_state(stk::mesh::StateN);
-
-        ngp_velocity_field_n = &stk::mesh::get_updated_ngp_field<double>(*velocity_field_n);
-        ngp_velocity_field_np1 = &stk::mesh::get_updated_ngp_field<double>(*velocity_field_np1);
-        ngp_acceleration_field_n = &stk::mesh::get_updated_ngp_field<double>(*acceleration_field_n);
-
-        // Get the ngp mesh
-        ngp_mesh = &stk::mesh::get_updated_ngp_mesh(*bulk_data);
-
-        // Get the universal part
-        universal_part = bulk_data->mesh_meta_data().universal_part();
-    }
-    void FillFields();
-
-    ~NodeProcessingBenchmarking() {}
-
-    void Run();
-
-   protected:
-    void DirectFunction(double time_step);
-
-    stk::mesh::MetaData *meta_data;
-    stk::mesh::BulkData *bulk_data;
-    stk::mesh::NgpMesh *ngp_mesh;
-    stk::mesh::Selector universal_part;
-    DoubleField *velocity_field;
-    DoubleField *acceleration_field;
-    DoubleField *velocity_field_n;
-    DoubleField *velocity_field_np1;
-    DoubleField *acceleration_field_n;
-    NgpDoubleField *ngp_velocity_field;
-    NgpDoubleField *ngp_acceleration_field;
-    NgpDoubleField *ngp_velocity_field_n;
-    NgpDoubleField *ngp_velocity_field_np1;
-    NgpDoubleField *ngp_acceleration_field_n;
-};
-
-void BenchmarkNodeProcessing();
