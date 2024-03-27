@@ -18,11 +18,16 @@ Among the unit tests, various loop abstractions were benchmarked. They consisted
 - `StkForEachEntity`: Using `stk-ngp` `for_each_entity_run` abstraction that can run on the GPU or CPU.
 
 The operation was a simple operation where two nodal field values and a scalar were used to update a third nodal field:
+
 $v^{Ij}_{n+1} = v^{Ij}_n + \Delta t * a^{Ij}_n$
+
 where $Ij$ corresponds to node $I$ and degree-of-freedom $j$.
+
 or
+
 `velocity_data_np1(node_i, dof_j) = velocity_data_n(node_i, dof_j) + time_increment * acceleration_data_n(node_i, dof_j)`
-each operation was run thousands of times and the average time per iterations was calculated.
+
+Each operation was run thousands of times and the average time per iterations was calculated.
 
 Benchmarking was completed on an [Azure Standard_NC4as_T4_v3](https://learn.microsoft.com/en-us/azure/virtual-machines/nct4-v3-series) instance. With 4 cores on a AMD EPYC 7V12(Rome) CPU with 28 Gb or memory and a Nvidia Tesla T4 GPU. The run times are shown below. The `DirectFunction` and `LambdaFunction` had nearly identical performance. As implemented, the `StkForEachEntity` loop had a bit more initial overhead causing a small performance hit, noticeable for very fast iterations (low number of nodes) but negligible for slower iterations. The GPU runs for `StkForEachEntity` show the advantage of using the GPU if the workload is high enough (higher number of nodes).
 
