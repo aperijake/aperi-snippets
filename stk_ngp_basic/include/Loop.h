@@ -110,65 +110,42 @@ class NodeProcessorStkNgp {
     typedef stk::mesh::NgpField<double> NgpDoubleField;
 
    public:
-    NodeProcessorStkNgp(const std::shared_ptr<Kokkos::Array<NgpDoubleField, N>> fields,
-                        const std::shared_ptr<stk::mesh::NgpMesh> ngp_mesh,
-                        const std::shared_ptr<stk::mesh::Selector> selector)
+    NodeProcessorStkNgp(Kokkos::Array<NgpDoubleField, N> &fields,
+                        const stk::mesh::NgpMesh &ngp_mesh,
+                        const stk::mesh::Selector &selector)
         : m_fields(fields), m_ngp_mesh(ngp_mesh), m_selector(selector) {}
 
     // Loop over each node and apply the function
     template <typename Func, std::size_t... Is>
-    void for_each_dof_impl(const Func &func, std::index_sequence<Is...>) const {
+    void for_each_dof_impl(const Func &func, std::index_sequence<Is...>) {
         // Clear the sync state of the fields
         for (size_t i = 0; i < N; i++) {
-            (*m_fields.get())[i].clear_sync_state();
+            m_fields[i].clear_sync_state();
         }
+        auto fields = m_fields;
 
-        // Declare a device-accessible variable to hold the sum
-        // Kokkos::View<int, Kokkos::CudaSpace> d_sum("d_sum");
-
-        //// Initialize the sum to zero
-        // Kokkos::deep_copy(d_sum, 0);
-
-        auto &fields = *m_fields;
-        // printf("fields.size() = %i\n", (int)fields.size());
-
-        // printf("Calling for_each_entity_run\n");
+        // Loop over all the nodes
         stk::mesh::for_each_entity_run(
-            *m_ngp_mesh.get(), stk::topology::NODE_RANK, *m_selector.get(),
+            m_ngp_mesh, stk::topology::NODE_RANK, m_selector,
             KOKKOS_LAMBDA(const stk::mesh::FastMeshIndex &entity) {
-                // printf("fields[0]->get(entity, 0) = %f\n", fields[0](entity, 0));
-                // printf("fields[1]->get(entity, 0) = %f\n", fields[1](entity, 0));
-                // printf("fields[2]->get(entity, 0) = %f\n", fields[2](entity, 0));
                 for (size_t j = 0; j < 3; j++) {
-                    // func(&fields[0](entity, j), &fields[1](entity, j), &fields[2](entity, j));
                     func(&fields[Is](entity, j)...);
                 }
-                // printf("after fields[0]->get(entity, 0) = %f\n", fields[0](entity, 0));
-                // printf("after fields[1]->get(entity, 0) = %f\n", fields[1](entity, 0));
-                // printf("after fields[2]->get(entity, 0) = %f\n", fields[2](entity, 0));
-
-                // // Increment the sum
-                // Kokkos::atomic_fetch_add(&d_sum(), 1);
             });
-
-        // Copy the sum back to the host
-        // int h_sum = 0;
-        // Kokkos::deep_copy(h_sum, d_sum);
-        // printf("h_sum = %i\n", h_sum);
 
         // Modify the fields on the device
         for (size_t i = 0; i < N; i++) {
-            (*m_fields.get())[i].modify_on_device();
+            m_fields[i].modify_on_device();
         }
     }
 
     template <typename Func>
-    void for_each_dof(const Func &func) const {
+    void for_each_dof(const Func &func) {
         for_each_dof_impl(func, std::make_index_sequence<N>{});
     }
 
    private:
-    const std::shared_ptr<Kokkos::Array<NgpDoubleField, N>> m_fields;  // The fields to process
-    const std::shared_ptr<stk::mesh::NgpMesh> m_ngp_mesh;              // The ngp mesh object.
-    const std::shared_ptr<stk::mesh::Selector> m_selector;             // The selector for the nodes
+    Kokkos::Array<NgpDoubleField, N> m_fields;  // The fields to process
+    const stk::mesh::NgpMesh m_ngp_mesh;        // The ngp mesh object.
+    const stk::mesh::Selector m_selector;       // The selector for the nodes
 };

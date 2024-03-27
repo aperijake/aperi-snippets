@@ -128,13 +128,9 @@ class NodeLoopTestFixture : public ::testing::Test {
 
         // For the NodeProcessorStkNgp
         ngp_fields = {ngp_velocity_field_np1, ngp_velocity_field_n, ngp_acceleration_field_n};
-        // Create shared pointers
-        auto shared_ngp_fields = std::make_shared<Kokkos::Array<NgpDoubleField, 3>>(ngp_fields);
-        auto shared_ngp_mesh = std::make_shared<stk::mesh::NgpMesh>(*ngp_mesh);
-        auto shared_universal_part = std::make_shared<stk::mesh::Selector>(universal_part);
 
         // Pass shared pointers to NodeProcessorStkNgp
-        node_processor_stk_ngp = std::make_shared<NodeProcessorStkNgp<3>>(shared_ngp_fields, shared_ngp_mesh, shared_universal_part);
+        node_processor_stk_ngp = std::make_shared<NodeProcessorStkNgp<3>>(ngp_fields, *ngp_mesh, universal_part);
     }
 
     void FillFields() {
