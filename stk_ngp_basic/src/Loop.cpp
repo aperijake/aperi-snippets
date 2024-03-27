@@ -107,15 +107,16 @@ class NodeLoopTestFixture : public ::testing::Test {
         velocity_field_np1 = &velocity_field->field_of_state(stk::mesh::StateNP1);
         acceleration_field_n = &acceleration_field->field_of_state(stk::mesh::StateN);
 
-        // Fill the fields with initial values
-        FillFields();
+        // Get the ngp mesh
+        ngp_mesh = &stk::mesh::get_updated_ngp_mesh(*bulk_data);
 
+        // Get the ngp fields
         ngp_velocity_field_n = stk::mesh::get_updated_ngp_field<double>(*velocity_field_n);
         ngp_velocity_field_np1 = stk::mesh::get_updated_ngp_field<double>(*velocity_field_np1);
         ngp_acceleration_field_n = stk::mesh::get_updated_ngp_field<double>(*acceleration_field_n);
 
-        // Get the ngp mesh
-        ngp_mesh = &stk::mesh::get_updated_ngp_mesh(*bulk_data);
+        // Fill the fields with initial values
+        FillFields();
 
         // Get the universal part
         universal_part = bulk_data->mesh_meta_data().universal_part();
@@ -124,13 +125,38 @@ class NodeLoopTestFixture : public ::testing::Test {
         fields = {velocity_field_n, acceleration_field_n, velocity_field_np1};
         node_processor_with_standard_function = std::make_shared<NodeProcessorWithStandardFunction<3>>(fields, bulk_data.get());
         node_processor_with_lambda_function = std::make_shared<NodeProcessorWithLambdaFunction<3>>(fields, bulk_data.get());
+
+        // For the NodeProcessorStkNgp
+        ngp_fields = {ngp_velocity_field_np1, ngp_velocity_field_n, ngp_acceleration_field_n};
+        // Create shared pointers
+        auto shared_ngp_fields = std::make_shared<Kokkos::Array<NgpDoubleField, 3>>(ngp_fields);
+        auto shared_ngp_mesh = std::make_shared<stk::mesh::NgpMesh>(*ngp_mesh);
+        auto shared_universal_part = std::make_shared<stk::mesh::Selector>(universal_part);
+
+        // Pass shared pointers to NodeProcessorStkNgp
+        node_processor_stk_ngp = std::make_shared<NodeProcessorStkNgp<3>>(shared_ngp_fields, shared_ngp_mesh, shared_universal_part);
     }
 
     void FillFields() {
-        // Fill the fields with initial values
+        // Clear the sync state of the fields
+        ngp_acceleration_field_n.clear_sync_state();
+        ngp_velocity_field_n.clear_sync_state();
+        ngp_velocity_field_np1.clear_sync_state();
+
+        // Fill the fields with initial values, on host
         stk::mesh::field_fill(initial_velocity, *velocity_field_n);
         stk::mesh::field_fill(0.0, *velocity_field_np1);
         stk::mesh::field_fill(initial_acceleration, *acceleration_field_n);
+
+        // Set modified on host
+        ngp_acceleration_field_n.modify_on_host();
+        ngp_velocity_field_n.modify_on_host();
+        ngp_velocity_field_np1.modify_on_host();
+
+        // Sync to device
+        ngp_acceleration_field_n.sync_to_device();
+        ngp_velocity_field_n.sync_to_device();
+        ngp_velocity_field_np1.sync_to_device();
     }
 
     void DirectFunction(double time_increment) {
@@ -172,16 +198,23 @@ class NodeLoopTestFixture : public ::testing::Test {
         run_stk_for_each_entity_abstract(time_increment, ngp_mesh, universal_part, ngp_velocity_field_n, ngp_acceleration_field_n, ngp_velocity_field_np1);
     }
 
+    void StkForEachEntityRunAbstractClass(double time_increment) {
+        UpdateVelocity2 update_velocity(time_increment);
+        node_processor_stk_ngp->for_each_dof(update_velocity);
+    }
+
     template <typename Func>
     double BenchmarkFunction(size_t num_runs, const Func &func) {
         FillFields();
+        CheckFields(0.0);
         auto start = std::chrono::high_resolution_clock::now();
         for (size_t i = 0; i < num_runs; i++) {
             func(time_increment);
         }
         auto end = std::chrono::high_resolution_clock::now();
         std::chrono::duration<double> elapsed_seconds = end - start;
-        CheckFields();
+        double expected_velocity_data_np1 = initial_velocity + time_increment * initial_acceleration;
+        CheckFields(expected_velocity_data_np1);
         return elapsed_seconds.count();
     }
 
@@ -225,21 +258,21 @@ class NodeLoopTestFixture : public ::testing::Test {
         double target_time = 1.0;
         std::cout << std::scientific << std::setprecision(6);  // Set output to scientific notation and 6 digits of precision
 
-        std::array<double, 5> times;
+        std::array<double, 6> times;
 
         times[0] = TimeTargetBenchmarkFunction(target_time, [&](double time_increment) { DirectFunction(time_increment); });
         times[1] = TimeTargetBenchmarkFunction(target_time, [&](double time_increment) { StandardFunction(time_increment); });
         times[2] = TimeTargetBenchmarkFunction(target_time, [&](double time_increment) { LambdaFunction(time_increment); });
         times[3] = TimeTargetBenchmarkFunction(target_time, [&](double time_increment) { StkForEachEntityRun(time_increment); });
         times[4] = TimeTargetBenchmarkFunction(target_time, [&](double time_increment) { StkForEachEntityRunAbstract(time_increment); });
+        times[5] = TimeTargetBenchmarkFunction(target_time, [&](double time_increment) { StkForEachEntityRunAbstractClass(time_increment); });
 
-        std::array<std::string, 5> names = {"DirectFunction", "StandardFunction", "LambdaFunction", "StkForEachEntity", "StkForEachEntityAbstract"};
+        std::array<std::string, 6> names = {"DirectFunction", "StandardFunction", "LambdaFunction", "StkForEachEntity", "StkForEachEntityAbstract", "StkForEachEntityClass"};
 
         PrintStats(times, names, num_elements_x, num_elements_y, num_elements_z, expected_num_nodes);
     }
 
-    void CheckFields() {
-        double expected_velocity_data_np1 = initial_velocity + time_increment * initial_acceleration;
+    void CheckFields(double expected_velocity_data_np1 = 0.0) {
         ngp_velocity_field_np1.sync_to_host();
         ngp_velocity_field_n.sync_to_host();
         ngp_acceleration_field_n.sync_to_host();
@@ -276,9 +309,11 @@ class NodeLoopTestFixture : public ::testing::Test {
     NgpDoubleField ngp_velocity_field_np1;
     NgpDoubleField ngp_acceleration_field_n;
     std::array<DoubleField *, 3> fields;
+    Kokkos::Array<NgpDoubleField, 3> ngp_fields;
     std::shared_ptr<NodeProcessorWithStandardFunction<3>> node_processor_with_standard_function;
     std::shared_ptr<NodeProcessorWithLambdaFunction<3>> node_processor_with_lambda_function;
     std::function<void(size_t, std::array<double *, 3> &)> func_node_processor_with_standard_function;
+    std::shared_ptr<NodeProcessorStkNgp<3>> node_processor_stk_ngp;
 };
 
 // Test directly looping over the nodes
@@ -286,28 +321,48 @@ TEST_F(NodeLoopTestFixture, Direct) {
     // Run the benchmarking
     AddMeshDatabase(num_elements_x, num_elements_y, num_elements_z);
     DirectFunction(time_increment);
-    CheckFields();
+    double expected_velocity_data_np1 = initial_velocity + time_increment * initial_acceleration;
+    CheckFields(expected_velocity_data_np1);
 }
 
 // Test using a standard function
 TEST_F(NodeLoopTestFixture, StandardFunction) {
     AddMeshDatabase(num_elements_x, num_elements_y, num_elements_z);
     StandardFunction(time_increment);
-    CheckFields();
+    double expected_velocity_data_np1 = initial_velocity + time_increment * initial_acceleration;
+    CheckFields(expected_velocity_data_np1);
 }
 
 // Test using a lambda function
 TEST_F(NodeLoopTestFixture, LambdaFunction) {
     AddMeshDatabase(num_elements_x, num_elements_y, num_elements_z);
     LambdaFunction(time_increment);
-    CheckFields();
+    double expected_velocity_data_np1 = initial_velocity + time_increment * initial_acceleration;
+    CheckFields(expected_velocity_data_np1);
 }
 
 // Test using the stk::mesh::for_each_entity_run method
 TEST_F(NodeLoopTestFixture, StkMeshForEachEntityRun) {
     AddMeshDatabase(num_elements_x, num_elements_y, num_elements_z);
     StkForEachEntityRun(time_increment);
-    CheckFields();
+    double expected_velocity_data_np1 = initial_velocity + time_increment * initial_acceleration;
+    CheckFields(expected_velocity_data_np1);
+}
+
+// Test using the stk::mesh::for_each_entity_run method with an abstract function
+TEST_F(NodeLoopTestFixture, StkMeshForEachEntityRunAbstract) {
+    AddMeshDatabase(num_elements_x, num_elements_y, num_elements_z);
+    StkForEachEntityRunAbstract(time_increment);
+    double expected_velocity_data_np1 = initial_velocity + time_increment * initial_acceleration;
+    CheckFields(expected_velocity_data_np1);
+}
+
+// Test using the stk::mesh::for_each_entity_run method with an abstract function in a class
+TEST_F(NodeLoopTestFixture, StkMeshForEachEntityRunAbstractClass) {
+    AddMeshDatabase(num_elements_x, num_elements_y, num_elements_z);
+    StkForEachEntityRunAbstractClass(time_increment);
+    double expected_velocity_data_np1 = initial_velocity + time_increment * initial_acceleration;
+    CheckFields(expected_velocity_data_np1);
 }
 
 // Benchmark the functions
