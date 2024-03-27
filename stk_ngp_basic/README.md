@@ -17,7 +17,7 @@ Among the unit tests, various loop abstractions were benchmarked. They consisted
 - `StandardFunction`: The operation is implemented in a `std::function`.
 - `StkForEachEntity`: Using `stk-ngp` `for_each_entity_run` abstraction that can run on the GPU or CPU.
 
-The operation was a simple operation where two nodal field values and a scalar were used to update a third nodal field:
+The operation was a simple calculation where two nodal field values and a scalar were used to update a third nodal field:
 
 $v^{Ij}_{n+1} = v^{Ij}_n + \Delta t * a^{Ij}_n$
 
