@@ -2,8 +2,8 @@
 
 #include <gtest/gtest.h>
 
-#include <iostream>
-#include <random>
+#include <filesystem>
+#include <iomanip>
 #include <stk_io/StkMeshIoBroker.hpp>
 #include <stk_mesh/base/BulkData.hpp>
 #include <stk_mesh/base/FieldBLAS.hpp>
@@ -31,36 +31,6 @@ void run_stk_for_each_entity(double time_increment, stk::mesh::NgpMesh *ngp_mesh
         KOKKOS_LAMBDA(const stk::mesh::FastMeshIndex &entity) {
             for (size_t j = 0; j < 3; j++) {
                 ngp_velocity_field_np1(entity, j) = ngp_velocity_field_n(entity, j) + time_increment * ngp_acceleration_field_n(entity, j);
-            }
-        });
-
-    // Set modified on device
-    ngp_velocity_field_n.modify_on_device();
-    ngp_acceleration_field_n.modify_on_device();
-    ngp_velocity_field_np1.modify_on_device();
-}
-
-struct UpdateVelocity {
-    KOKKOS_INLINE_FUNCTION
-    void operator()(double *velocity_data_np1, double velocity_data_n, double acceleration_data_n, double time_increment) const {
-        *velocity_data_np1 = velocity_data_n + time_increment * acceleration_data_n;
-    }
-};
-
-void run_stk_for_each_entity_abstract(double time_increment, stk::mesh::NgpMesh *ngp_mesh, stk::mesh::Selector universal_part, NgpDoubleField &ngp_velocity_field_n, NgpDoubleField &ngp_acceleration_field_n, NgpDoubleField &ngp_velocity_field_np1) {
-    // Test as if we are running the time integration loop for num_runs iterations
-    // Clear the sync state of the fields
-    ngp_velocity_field_n.clear_sync_state();
-    ngp_acceleration_field_n.clear_sync_state();
-    ngp_velocity_field_np1.clear_sync_state();
-
-    UpdateVelocity update_velocity;
-
-    stk::mesh::for_each_entity_run(
-        *ngp_mesh, stk::topology::NODE_RANK, universal_part,
-        KOKKOS_LAMBDA(const stk::mesh::FastMeshIndex &entity) {
-            for (size_t j = 0; j < 3; j++) {
-                update_velocity(&ngp_velocity_field_np1(entity, j), ngp_velocity_field_n(entity, j), ngp_acceleration_field_n(entity, j), time_increment);
             }
         });
 
@@ -190,12 +160,8 @@ class NodeLoopTestFixture : public ::testing::Test {
         run_stk_for_each_entity(time_increment, ngp_mesh, universal_part, ngp_velocity_field_n, ngp_acceleration_field_n, ngp_velocity_field_np1);
     }
 
-    void StkForEachEntityRunAbstract(double time_increment) {
-        run_stk_for_each_entity_abstract(time_increment, ngp_mesh, universal_part, ngp_velocity_field_n, ngp_acceleration_field_n, ngp_velocity_field_np1);
-    }
-
-    void StkForEachEntityRunAbstractClass(double time_increment) {
-        UpdateVelocity2 update_velocity(time_increment);
+    void StkForEachEntityRunAbstracted(double time_increment) {
+        UpdateVelocity update_velocity(time_increment);
         node_processor_stk_ngp->for_each_dof(update_velocity);
     }
 
@@ -254,18 +220,38 @@ class NodeLoopTestFixture : public ::testing::Test {
         double target_time = 1.0;
         std::cout << std::scientific << std::setprecision(6);  // Set output to scientific notation and 6 digits of precision
 
-        std::array<double, 6> times;
+        std::array<double, 5> times;
 
         times[0] = TimeTargetBenchmarkFunction(target_time, [&](double time_increment) { DirectFunction(time_increment); });
         times[1] = TimeTargetBenchmarkFunction(target_time, [&](double time_increment) { StandardFunction(time_increment); });
         times[2] = TimeTargetBenchmarkFunction(target_time, [&](double time_increment) { LambdaFunction(time_increment); });
         times[3] = TimeTargetBenchmarkFunction(target_time, [&](double time_increment) { StkForEachEntityRun(time_increment); });
-        times[4] = TimeTargetBenchmarkFunction(target_time, [&](double time_increment) { StkForEachEntityRunAbstract(time_increment); });
-        times[5] = TimeTargetBenchmarkFunction(target_time, [&](double time_increment) { StkForEachEntityRunAbstractClass(time_increment); });
+        times[4] = TimeTargetBenchmarkFunction(target_time, [&](double time_increment) { StkForEachEntityRunAbstracted(time_increment); });
 
-        std::array<std::string, 6> names = {"DirectFunction", "StandardFunction", "LambdaFunction", "StkForEachEntity", "StkForEachEntityAbstract", "StkForEachEntityClass"};
+        std::array<std::string, 5> names = {"DirectFunction", "StandardFunction", "LambdaFunction", "StkForEachEntity", "StkForEachEntityAbstracted"};
 
         PrintStats(times, names, num_elements_x, num_elements_y, num_elements_z, expected_num_nodes);
+
+        // Check if this is running on the GPU
+        bool gpu = Kokkos::DefaultExecutionSpace::concurrency() > 1 ? true : false;
+
+        WriteStatsToCsv(times, names, num_elements_x, num_elements_y, num_elements_z, expected_num_nodes, gpu);
+    }
+
+    void WriteStatsToCsv(const std::array<double, 5> &times, const std::array<std::string, 5> &names, size_t num_elements_x, size_t num_elements_y, size_t num_elements_z, size_t num_nodes, bool gpu) {
+        std::ofstream file;
+        // Check if the file exists
+        if (!std::filesystem::exists("benchmark.csv")) {
+            file.open("benchmark.csv");
+            file << "Name, NumElementsX, NumElementsY, NumElementsZ, NumNodes, GPU, Time\n";
+            file.close();
+        }
+        file.open("benchmark.csv", std::ios_base::app);
+        for (size_t i = 0; i < times.size(); i++) {
+            file << names[i] << ", " << num_elements_x << "," << num_elements_y << "," << num_elements_z << "," << num_nodes << "," << gpu << "," << times[i];
+            file << "\n";
+        }
+        file.close();
     }
 
     void CheckFields(double expected_velocity_data_np1 = 0.0) {
@@ -345,18 +331,10 @@ TEST_F(NodeLoopTestFixture, StkMeshForEachEntityRun) {
     CheckFields(expected_velocity_data_np1);
 }
 
-// Test using the stk::mesh::for_each_entity_run method with an abstract function
-TEST_F(NodeLoopTestFixture, StkMeshForEachEntityRunAbstract) {
-    AddMeshDatabase(num_elements_x, num_elements_y, num_elements_z);
-    StkForEachEntityRunAbstract(time_increment);
-    double expected_velocity_data_np1 = initial_velocity + time_increment * initial_acceleration;
-    CheckFields(expected_velocity_data_np1);
-}
-
 // Test using the stk::mesh::for_each_entity_run method with an abstract function in a class
-TEST_F(NodeLoopTestFixture, StkMeshForEachEntityRunAbstractClass) {
+TEST_F(NodeLoopTestFixture, StkMeshForEachEntityRunAbstracted) {
     AddMeshDatabase(num_elements_x, num_elements_y, num_elements_z);
-    StkForEachEntityRunAbstractClass(time_increment);
+    StkForEachEntityRunAbstracted(time_increment);
     double expected_velocity_data_np1 = initial_velocity + time_increment * initial_acceleration;
     CheckFields(expected_velocity_data_np1);
 }
@@ -366,18 +344,26 @@ TEST_F(NodeLoopTestFixture, Benchmark10x10x100) {
     RunBenchmarkSet(10, 10, 100);
 }
 
+TEST_F(NodeLoopTestFixture, Benchmark10x10x500) {
+    RunBenchmarkSet(10, 10, 500);
+}
+
 TEST_F(NodeLoopTestFixture, Benchmark10x10x1000) {
     RunBenchmarkSet(10, 10, 1000);
+}
+
+TEST_F(NodeLoopTestFixture, Benchmark10x10x5000) {
+    RunBenchmarkSet(10, 10, 5000);
 }
 
 TEST_F(NodeLoopTestFixture, Benchmark10x10x10000) {
     RunBenchmarkSet(10, 10, 10000);
 }
 
-TEST_F(NodeLoopTestFixture, Benchmark10x100x1000) {
-    RunBenchmarkSet(10, 100, 1000);
+TEST_F(NodeLoopTestFixture, Benchmark10x10x50000) {
+    RunBenchmarkSet(10, 10, 50000);
 }
 
-TEST_F(NodeLoopTestFixture, Benchmark100x100x100) {
-    RunBenchmarkSet(100, 100, 100);
+TEST_F(NodeLoopTestFixture, Benchmark10x10x100000) {
+    RunBenchmarkSet(10, 10, 100000);
 }

@@ -93,10 +93,10 @@ class NodeProcessorWithLambdaFunction {
     stk::mesh::BulkData *m_bulk_data;             ///< The bulk data object.
 };
 
-struct UpdateVelocity2 {
+struct UpdateVelocity {
     double time_increment;
 
-    UpdateVelocity2(double time_increment) : time_increment(time_increment) {}
+    UpdateVelocity(double time_increment) : time_increment(time_increment) {}
 
     KOKKOS_INLINE_FUNCTION
     void operator()(double *velocity_data_np1, double *velocity_data_n, double *acceleration_data_n) const {
