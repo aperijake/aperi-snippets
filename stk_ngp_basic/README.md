@@ -12,12 +12,12 @@ These examples, implemented as unit tests, show some basic usage of `stk_ngp` an
 
 Among the unit tests, various loop abstractions were benchmarked. They consisted of:
 
-- `DirectFunction`: Just calling a function the directly implements the operation.
+- `DirectFunction`: The operation is implemented in a free function.
 - `LambdaFunction`: The operation is implemented in a lambda function.
 - `StandardFunction`: The operation is implemented in a `std::function`.
 - `StkForEachEntity`: Using `stk-ngp` `for_each_entity_run` abstraction that can run on the GPU or CPU.
 
-The operation was a simple calculation where two nodal field values and a scalar were used to update a third nodal field:
+The operation is a simple calculation where two nodal field values and a scalar are used to update a third nodal field:
 
 $v^{Ij}_{n+1} = v^{Ij}_n + \Delta t * a^{Ij}_n$
 
@@ -29,7 +29,7 @@ or
 
 Each operation was run thousands of times and the average time per iterations was calculated.
 
-Benchmarking was completed on an [Azure Standard_NC4as_T4_v3](https://learn.microsoft.com/en-us/azure/virtual-machines/nct4-v3-series) instance. With 4 cores on a AMD EPYC 7V12(Rome) CPU with 28 Gb or memory and a Nvidia Tesla T4 GPU. The run times are shown below. The `DirectFunction` and `LambdaFunction` had nearly identical performance. As implemented, the `StkForEachEntity` loop had a bit more initial overhead causing a small performance hit, noticeable for very fast iterations (low number of nodes) but negligible for slower iterations. The GPU runs for `StkForEachEntity` show the advantage of using the GPU if the workload is high enough (higher number of nodes).
+Benchmarking was completed on an [Azure Standard_NC4as_T4_v3](https://learn.microsoft.com/en-us/azure/virtual-machines/nct4-v3-series) instance with a 4 core AMD EPYC 7V12(Rome) CPU, 28 Gb of memory, and a Nvidia Tesla T4 GPU. The run times are shown below. The `DirectFunction` and `LambdaFunction` had nearly identical performance. As implemented, the `StkForEachEntity` loop had a bit more initial overhead causing a small performance hit, noticeable for very fast iterations (low number of nodes) but negligible for slower iterations. The runs for `StkForEachEntity` show the advantage of using the GPU if the workload is high enough (higher number of nodes).
 
 ![Benchmark](benchmark_orig.png)
 
