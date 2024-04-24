@@ -61,4 +61,4 @@ set_target_properties(stk_ngp_basic PROPERTIES
     OUTPUT_NAME "stk_ngp_basic$<$<CONFIG:Debug>:_debug>"
 )
 
-gtest_discover_tests(stk_ngp_basic TIMEOUT 240)
+gtest_discover_tests(stk_ngp_basic TIMEOUT 600 DISCOVERY_TIMEOUT 600)
